@@ -1,8 +1,16 @@
 import axios, { AxiosResponse } from 'axios';
 
+// api.ts dosyasının en üstüne ekleyin
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8080/api';
+
+const api = axios.create({
+  baseURL: API_BASE_URL,
+});
+
+/*  local için
 const api = axios.create({
   baseURL: 'http://localhost:8080/api',
-});
+}); */ 
 
 api.interceptors.request.use(
   (config) => {
