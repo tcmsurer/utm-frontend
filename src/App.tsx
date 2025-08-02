@@ -1,26 +1,29 @@
 import React from 'react';
-import logo from './logo.svg';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import './App.css';
+import Home from './components/Home';
+import AdminPage from './components/AdminPage';
+import MyRequests from './components/MyRequests';
+import AboutPage from './components/AboutPage'; // Yeni import
+import ContactPage from './components/ContactPage'; // Yeni import
+import { AuthProvider } from './context/AuthContext';
 
-function App() {
+const App: React.FC = () => {
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <AuthProvider>
+      <Router>
+        <div className="p-0"> {/* container-fluid'i kaldırdık, tam kontrol bizde */}
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/admin" element={<AdminPage />} />
+            <Route path="/taleplerim" element={<MyRequests />} />
+            <Route path="/hakkimizda" element={<AboutPage />} /> {/* Yeni Rota */}
+            <Route path="/iletisim" element={<ContactPage />} /> {/* Yeni Rota */}
+          </Routes>
+        </div>
+      </Router>
+    </AuthProvider>
   );
-}
+};
 
 export default App;
