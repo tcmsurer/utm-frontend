@@ -43,7 +43,7 @@ const Home: React.FC = () => {
                   paddingBottom: '0.5rem',
                 }}
               >
-                Aradığın Usta Bir Adım Uzağınızda
+                İşin Ustaları Burada
               </Typography>
               <RequestStepper />
           </Paper>

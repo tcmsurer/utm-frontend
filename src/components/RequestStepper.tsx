@@ -83,8 +83,8 @@ export const RequestStepper = () => {
                 return (
                     <Box sx={{ minWidth: 120, my: 4, display: 'flex', justifyContent: 'center' }}>
                         <FormControl fullWidth sx={{ ...formInputStyle, maxWidth: '500px' }}>
-                            <InputLabel id="usta-select-label">Hangi alanda ustaya ihtiyacınız var?</InputLabel>
-                            <Select labelId="usta-select-label" value={selectedUsta} label="Hangi alanda ustaya ihtiyacınız var?" onChange={e => handleUstaSelect(e.target.value as string)}>
+                            <InputLabel id="usta-select-label">Bir Usta Seçin</InputLabel>
+                            <Select labelId="usta-select-label" value={selectedUsta} label="Bir Usta Seçin" onChange={e => handleUstaSelect(e.target.value as string)}>
                                 <MenuItem value=""><em>Usta Seçiniz</em></MenuItem>
                                 {ustalar.map(usta => <MenuItem key={usta.id} value={usta.name}>{usta.name}</MenuItem>)}
                             </Select>
