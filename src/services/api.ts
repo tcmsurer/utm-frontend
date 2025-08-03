@@ -1,16 +1,10 @@
 import axios, { AxiosResponse } from 'axios';
 
-// api.ts dosyasının en üstüne ekleyin
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8080/api';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
 });
-
-/*  local için
-const api = axios.create({
-  baseURL: 'http://localhost:8080/api',
-}); */ 
 
 api.interceptors.request.use(
   (config) => {
@@ -27,6 +21,23 @@ api.interceptors.request.use(
   }
 );
 
+api.interceptors.response.use(
+  (response) => {
+    return response;
+  },
+  (error) => {
+    if (error.response && (error.response.status === 401 || error.response.status === 403)) {
+      localStorage.removeItem('jwt_token');
+      if (window.location.pathname !== '/') {
+          window.location.href = '/';
+      }
+      alert("Oturum süreniz doldu veya yetkiniz yok. Lütfen tekrar giriş yapın.");
+    }
+    return Promise.reject(error);
+  }
+);
+
+
 // Tipleri ve DTO'ları tanımlama (Backend ile uyumlu)
 export interface Usta {
   id: string;
@@ -42,18 +53,22 @@ export interface Soru {
   order: number;
 }
 
+export interface Offer {
+    id: string;
+    price: number;
+    details: string;
+    createdDate: string;
+}
+
+// DİKKAT: Bu tip, backend'deki DTO ile uyumlu olacak şekilde güncellendi.
 export interface ServiceRequest {
   id: string;
   title: string;
-  description: string;
-  user: { username: string };
+  username: string; // Artık user objesi yerine sadece username
   category: string;
-  email: string;
-  phone: string;
-  address: string;
   details: { [key: string]: string };
   createdDate: string;
-  offers: Offer[]; // Gelen teklifleri tutacak dizi
+  offers: Offer[];
 }
 
 export interface MailLog {
@@ -65,20 +80,11 @@ export interface MailLog {
     sentDate: string;
 }
 
-// Backend'den gelen token objesinin tipi
 export interface AuthResponse {
   token: string;
 }
 
-export interface Offer {
-    id: string;
-    price: number;
-    details: string;
-    createdDate: string;
-}
-
 // --- Auth Endpoints ---
-// AxiosResponse<AuthResponse> -> Gelen cevabın data alanının AuthResponse tipinde olacağını belirtir
 export const loginUser = (credentials: any): Promise<AxiosResponse<AuthResponse>> => api.post('/auth/login', credentials);
 export const registerUser = (details: any): Promise<AxiosResponse<AuthResponse>> => api.post('/auth/register', details);
 
