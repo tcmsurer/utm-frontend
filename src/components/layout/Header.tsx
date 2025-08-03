@@ -137,7 +137,7 @@ export const Header = () => {
               sx={{ height: 40, mr: 1.5 }}
             />
             <Typography variant="h6" component="div" sx={{ fontFamily: 'Poppins', fontWeight: 'bold' }}>
-              Usta Merkezi
+              Usta Tedarik Merkezi
             </Typography>
           </Box>
           {isMobile ? renderMobileMenu() : renderDesktopMenu()}

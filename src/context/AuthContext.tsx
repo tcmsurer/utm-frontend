@@ -4,7 +4,6 @@ import type { AuthResponse } from '../services/api';
 import { jwtDecode } from 'jwt-decode';
 import { AxiosResponse } from 'axios';
 
-// Context içinde saklanacak verinin tipini tanımlayalım
 interface AuthContextType {
     token: string | null;
     user: UserInfo | null;
@@ -14,16 +13,13 @@ interface AuthContextType {
     logout: () => void;
 }
 
-// Token'dan decode edilecek kullanıcı bilgisinin tipi
 interface UserInfo {
-    sub: string; // Kullanıcı adı (subject)
-    authorities?: { authority: string }[]; // Roller
+    sub: string;
+    authorities?: string[];
 }
 
-// Context'i oluştur
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Provider bileşenini oluştur
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const [token, setToken] = useState<string | null>(null);
     const [user, setUser] = useState<UserInfo | null>(null);
@@ -36,10 +32,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 const decodedUser = jwtDecode<UserInfo>(storedToken);
                 setUser(decodedUser);
                 setToken(storedToken);
-                const roles = decodedUser.authorities?.map(a => a.authority) || [];
+                const roles = decodedUser.authorities || [];
                 setIsAdmin(roles.includes('ROLE_ADMIN'));
             } catch (error) {
-                // Geçersiz token varsa temizle
                 localStorage.removeItem('jwt_token');
                 setUser(null);
                 setToken(null);
@@ -54,17 +49,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     ) => {
         try {
             const response = await apiAuthFunction(credentials);
-            const newToken = response.data.token; // Düzeltme: Axios cevabının data alanından token'ı al
+            const newToken = response.data.token;
             
             localStorage.setItem('jwt_token', newToken);
             const decodedUser = jwtDecode<UserInfo>(newToken);
             setToken(newToken);
             setUser(decodedUser);
-            const roles = decodedUser.authorities?.map(a => a.authority) || [];
+            const roles = decodedUser.authorities || [];
             setIsAdmin(roles.includes('ROLE_ADMIN'));
         } catch (error) {
             console.error("Authentication failed:", error);
-            throw error; // Hatanın bileşen tarafından yakalanabilmesi için tekrar fırlat
+            throw error;
         }
     };
     
@@ -83,7 +78,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
-// Hook'u oluştur
 export const useAuth = () => {
     const context = useContext(AuthContext);
     if (context === undefined) {
