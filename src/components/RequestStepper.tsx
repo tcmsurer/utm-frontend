@@ -112,7 +112,7 @@ export const RequestStepper = () => {
                     </Box>
                 );
             case 2:
-                const finalQuestion = `'${selectedUsta}' ustası başka neyi bilmeli / neye dikkat etmeli?`;
+                const finalQuestion = `'${selectedUsta}' başka neyi bilmeli / neye dikkat etmeli?`;
                 return (
                      <Box>
                          <Typography variant="h6" sx={{ mb: 2 }}>Eklemek İstedikleriniz</Typography>

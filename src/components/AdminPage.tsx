@@ -44,7 +44,7 @@ const AdminPage: React.FC = () => {
         <div>
             <Header />
             <Container maxWidth="lg" sx={{ mt: 4 }}>
-                <Typography variant="h4" gutterBottom>Admin Paneli</Typography>
+                <Typography variant="h4" gutterBottom align="center">Admin Paneli</Typography>
                 <Paper>
                     <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
                         <Tabs 
