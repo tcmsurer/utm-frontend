@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
-import { AppBar, Toolbar, Typography, Button, Modal, Box, TextField, Tabs, Tab } from '@mui/material';
+import { AppBar, Toolbar, Typography, Button, Modal, Box, TextField, Tabs, Tab, useTheme, useMediaQuery, IconButton, Drawer, List, ListItem, ListItemButton, ListItemText, Divider } from '@mui/material';
 import { Link, useNavigate } from 'react-router-dom';
-import logo from '../../assets/banner.png'; // 1. Adım: Logoyu import et
+import logo from '../../assets/banner.png';
+import MenuIcon from '@mui/icons-material/Menu';
 
 const modalStyle = {
   position: 'absolute' as 'absolute',
@@ -25,7 +26,10 @@ export const Header = () => {
   const [phone, setPhone] = useState('');
   const [address, setAddress] = useState('');
   const [error, setError] = useState('');
-
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const auth = useAuth();
   const navigate = useNavigate();
 
@@ -56,36 +60,87 @@ export const Header = () => {
     navigate('/');
   }
 
+  const renderDesktopMenu = () => (
+    <>
+      <Button color="inherit" component={Link} to="/hakkimizda">Hakkımızda</Button>
+      <Button color="inherit" component={Link} to="/iletisim">İletişim</Button>
+      {auth.user ? (
+        <>
+          <Button color="inherit" component={Link} to="/taleplerim">Taleplerim</Button>
+          <Typography sx={{ mx: 2 }}>Hoşgeldin, {auth.user.sub}</Typography>
+          <Button color="inherit" onClick={handleLogout}>Çıkış Yap</Button>
+        </>
+      ) : (
+        <Button color="inherit" onClick={handleOpen}>Giriş Yap / Kayıt Ol</Button>
+      )}
+    </>
+  );
+
+  const renderMobileMenu = () => (
+    <>
+      <IconButton
+        color="inherit"
+        aria-label="open drawer"
+        edge="end"
+        onClick={() => setDrawerOpen(true)}
+      >
+        <MenuIcon />
+      </IconButton>
+      <Drawer
+        anchor="right"
+        open={drawerOpen}
+        onClose={() => setDrawerOpen(false)}
+      >
+        <Box
+          sx={{ width: 250 }}
+          role="presentation"
+          onClick={() => setDrawerOpen(false)}
+          onKeyDown={() => setDrawerOpen(false)}
+        >
+          <List>
+            <ListItem disablePadding component={Link} to="/hakkimizda" sx={{color: 'inherit'}}>
+              <ListItemButton><ListItemText primary="Hakkımızda" /></ListItemButton>
+            </ListItem>
+            <ListItem disablePadding component={Link} to="/iletisim" sx={{color: 'inherit'}}>
+              <ListItemButton><ListItemText primary="İletişim" /></ListItemButton>
+            </ListItem>
+            <Divider />
+            {auth.user ? (
+              <>
+                <ListItem disablePadding component={Link} to="/taleplerim" sx={{color: 'inherit'}}>
+                  <ListItemButton><ListItemText primary="Taleplerim" /></ListItemButton>
+                </ListItem>
+                <ListItem disablePadding onClick={handleLogout} sx={{color: 'inherit'}}>
+                  <ListItemButton><ListItemText primary="Çıkış Yap" /></ListItemButton>
+                </ListItem>
+              </>
+            ) : (
+              <ListItem disablePadding onClick={handleOpen} sx={{color: 'inherit'}}>
+                <ListItemButton><ListItemText primary="Giriş Yap / Kayıt Ol" /></ListItemButton>
+              </ListItem>
+            )}
+          </List>
+        </Box>
+      </Drawer>
+    </>
+  );
+
   return (
     <>
       <AppBar position="static" sx={{ background: 'linear-gradient(45deg, #2196F3 30%, #21CBF3 90%)', boxShadow: '0 3px 5px 2px rgba(33, 203, 243, .3)' }}>
         <Toolbar>
-          
-          {/* 2. Adım: Başlık kısmını logo ve metin içeren bir Box ile değiştir */}
           <Box component={Link} to="/" sx={{ flexGrow: 1, display: 'flex', alignItems: 'center', textDecoration: 'none', color: 'inherit' }}>
             <Box
               component="img"
               src={logo}
               alt="Usta Merkezi Logo"
-              sx={{ height: 40, mr: 1.5 }} // Logo boyutu ve metinle arasındaki boşluk
+              sx={{ height: 40, mr: 1.5 }}
             />
             <Typography variant="h6" component="div" sx={{ fontFamily: 'Poppins', fontWeight: 'bold' }}>
-              Usta Tedarik Merkezi
+              Usta Merkezi
             </Typography>
           </Box>
-
-          <Button color="inherit" component={Link} to="/hakkimizda">Hakkımızda</Button>
-          <Button color="inherit" component={Link} to="/iletisim">İletişim</Button>
-
-          {auth.user ? (
-            <>
-              <Button color="inherit" component={Link} to="/taleplerim">Taleplerim</Button>
-              <Typography sx={{ mx: 2 }}>Hoşgeldin, {auth.user.sub}</Typography>
-              <Button color="inherit" onClick={handleLogout}>Çıkış Yap</Button>
-            </>
-          ) : (
-            <Button color="inherit" onClick={handleOpen}>Giriş Yap / Kayıt Ol</Button>
-          )}
+          {isMobile ? renderMobileMenu() : renderDesktopMenu()}
         </Toolbar>
       </AppBar>
 

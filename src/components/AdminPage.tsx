@@ -4,8 +4,8 @@ import { Box, Typography, Tabs, Tab, Paper, Container } from '@mui/material';
 import { Header } from './layout/Header';
 import { RequestsTab } from './admin/RequestsTab';
 import { TradesTab } from './admin/TradesTab';
-import { QuestionsTab } from './admin/QuestionsTab'; // Import et
-import { MailLogTab } from './admin/MailLogTab';   // Import et
+import { QuestionsTab } from './admin/QuestionsTab';
+import { MailLogTab } from './admin/MailLogTab';
 
 function TabPanel(props: { children?: React.ReactNode; index: number; value: number; }) {
     const { children, value, index, ...other } = props;
@@ -24,13 +24,17 @@ const AdminPage: React.FC = () => {
         setTabIndex(newValue);
     };
 
-    if (!auth.user || auth.user.sub !== 'utm') { // Basit admin kontrolü
+    if (!auth.user || !auth.isAdmin) {
         return (
             <div>
                 <Header />
                 <Container sx={{ mt: 4 }}>
-                    <Typography variant="h4" color="error" align="center">Bu sayfaya erişim yetkiniz yok.</Typography>
-                    <Typography align="center">Lütfen admin olarak giriş yapın.</Typography>
+                    <Typography variant="h4" color="error" align="center">
+                        Bu sayfaya erişim yetkiniz yok.
+                    </Typography>
+                    <Typography align="center">
+                        Lütfen admin olarak giriş yapın.
+                    </Typography>
                 </Container>
             </div>
         );
@@ -40,10 +44,16 @@ const AdminPage: React.FC = () => {
         <div>
             <Header />
             <Container maxWidth="lg" sx={{ mt: 4 }}>
-                <Typography variant="h4" gutterBottom align="center">Admin Paneli</Typography>
+                <Typography variant="h4" gutterBottom>Admin Paneli</Typography>
                 <Paper>
                     <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
-                        <Tabs value={tabIndex} onChange={handleTabChange}>
+                        <Tabs 
+                            value={tabIndex} 
+                            onChange={handleTabChange}
+                            variant="scrollable"
+                            scrollButtons="auto"
+                            allowScrollButtonsMobile
+                        >
                             <Tab label="Talepler" />
                             <Tab label="Usta Tanımları" />
                             <Tab label="Soru Tanımları" />
@@ -57,10 +67,10 @@ const AdminPage: React.FC = () => {
                         <TradesTab />
                     </TabPanel>
                     <TabPanel value={tabIndex} index={2}>
-                        <QuestionsTab /> {/* Yeni bileşeni ekle */}
+                        <QuestionsTab />
                     </TabPanel>
                     <TabPanel value={tabIndex} index={3}>
-                        <MailLogTab />   {/* Yeni bileşeni ekle */}
+                        <MailLogTab />
                     </TabPanel>
                 </Paper>
             </Container>
