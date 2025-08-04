@@ -64,9 +64,14 @@ export const Header = () => {
     <>
       <Button color="inherit" component={Link} to="/hakkimizda">Hakkımızda</Button>
       <Button color="inherit" component={Link} to="/iletisim">İletişim</Button>
+      
       {auth.user ? (
         <>
-          <Button color="inherit" component={Link} to="/taleplerim">Taleplerim</Button>
+          {auth.isAdmin ? (
+            <Button color="inherit" component={Link} to="/admin">Admin (Konsol)</Button>
+          ) : (
+            <Button color="inherit" component={Link} to="/taleplerim">Taleplerim</Button>
+          )}
           <Typography sx={{ mx: 2 }}>Hoşgeldin, {auth.user.sub}</Typography>
           <Button color="inherit" onClick={handleLogout}>Çıkış Yap</Button>
         </>
@@ -107,9 +112,15 @@ export const Header = () => {
             <Divider />
             {auth.user ? (
               <>
-                <ListItem disablePadding component={Link} to="/taleplerim" sx={{color: 'inherit'}}>
-                  <ListItemButton><ListItemText primary="Taleplerim" /></ListItemButton>
-                </ListItem>
+                {auth.isAdmin ? (
+                  <ListItem disablePadding component={Link} to="/admin" sx={{color: 'inherit'}}>
+                    <ListItemButton><ListItemText primary="Admin (Konsol)" /></ListItemButton>
+                  </ListItem>
+                ) : (
+                  <ListItem disablePadding component={Link} to="/taleplerim" sx={{color: 'inherit'}}>
+                    <ListItemButton><ListItemText primary="Taleplerim" /></ListItemButton>
+                  </ListItem>
+                )}
                 <ListItem disablePadding onClick={handleLogout} sx={{color: 'inherit'}}>
                   <ListItemButton><ListItemText primary="Çıkış Yap" /></ListItemButton>
                 </ListItem>
@@ -137,7 +148,7 @@ export const Header = () => {
               sx={{ height: 40, mr: 1.5 }}
             />
             <Typography variant="h6" component="div" sx={{ fontFamily: 'Poppins', fontWeight: 'bold' }}>
-              Usta Tedarik Merkezi
+              Usta Merkezi
             </Typography>
           </Box>
           {isMobile ? renderMobileMenu() : renderDesktopMenu()}

@@ -40,7 +40,7 @@ export const RequestDetailModal = ({ request, open, onClose }: Props) => {
             await createOfferForAdmin(request.id, { price, details });
             setSuccess('Teklif başarıyla gönderildi!');
             setTimeout(() => {
-                onClose();
+                onClose(); // Modalı kapat ve listeyi yenilemesi için ana bileşeni haberdar et
             }, 2000);
         } catch (err) {
             setError('Teklif gönderilirken bir hata oluştu.');
@@ -59,10 +59,9 @@ export const RequestDetailModal = ({ request, open, onClose }: Props) => {
                 <List dense>
                     <ListItem><ListItemText primary="Başlık" secondary={request.title} /></ListItem>
                     <ListItem><ListItemText primary="Kategori" secondary={request.category} /></ListItem>
-                    <ListItem><ListItemText primary="Kullanıcı" secondary={request.user.username} /></ListItem>
+                    <ListItem><ListItemText primary="Kullanıcı" secondary={request.username} /></ListItem>
                 </List>
                 
-                {/* YENİ EKLENEN KISIM: SORULAR VE CEVAPLAR */}
                 <Divider sx={{ my: 2 }} />
                 <Typography variant="h6">Kullanıcının Verdiği Cevaplar</Typography>
                 <List dense>
@@ -70,12 +69,11 @@ export const RequestDetailModal = ({ request, open, onClose }: Props) => {
                         <ListItem key={question}>
                             <ListItemText 
                                 primary={question} 
-                                secondary={answer || "-"} // Cevap boşsa tire koy
+                                secondary={answer || "-"}
                             />
                         </ListItem>
                     ))}
                 </List>
-                {/* YENİ KISIM BİTTİ */}
 
                 <Divider sx={{ my: 2 }} />
                 <Typography variant="h6">Teklif Gönder</Typography>

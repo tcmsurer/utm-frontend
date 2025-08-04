@@ -37,7 +37,6 @@ api.interceptors.response.use(
   }
 );
 
-
 // Tipleri ve DTO'ları tanımlama (Backend ile uyumlu)
 export interface Usta {
   id: string;
@@ -60,13 +59,13 @@ export interface Offer {
     createdDate: string;
 }
 
-// DİKKAT: Bu tip, backend'deki DTO ile uyumlu olacak şekilde güncellendi.
+// DİKKAT: Bu tip, backend'deki DTO ile tam uyumlu olacak şekilde güncellendi.
 export interface ServiceRequest {
   id: string;
   title: string;
-  username: string; // Artık user objesi yerine sadece username
+  username: string; // user objesi yerine artık sadece username
   category: string;
-  details: { [key: string]: string };
+  details: { [key: string]: string }; // description yerine tüm detaylar burada
   createdDate: string;
   offers: Offer[];
 }

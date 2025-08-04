@@ -124,7 +124,11 @@ const MyRequests: React.FC = () => {
                             <Typography variant="h5">Talep Detayı</Typography>
                             <List dense>
                                 <ListItem><ListItemText primary="Başlık" secondary={selectedRequest.title} /></ListItem>
-                                <ListItem><ListItemText primary="Açıklama" secondary={selectedRequest.description} sx={{ whiteSpace: 'pre-wrap' }} /></ListItem>
+                                {Object.entries(selectedRequest.details).map(([question, answer]) => (
+                                    <ListItem key={question}>
+                                        <ListItemText primary={question} secondary={answer || "-"} />
+                                    </ListItem>
+                                ))}
                             </List>
                             <Divider sx={{ my: 2 }} />
                             <Typography variant="h6">Gelen Teklifler</Typography>

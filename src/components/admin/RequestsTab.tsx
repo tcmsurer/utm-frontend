@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Box, Typography, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Button } from '@mui/material';
 import { getAllRequestsForAdmin } from '../../services/api';
 import type { ServiceRequest } from '../../services/api';
-import { RequestDetailModal } from './RequestDetailModal'; // YENİ: Modal'ı import et
+import { RequestDetailModal } from './RequestDetailModal';
 
 export const RequestsTab = () => {
     const [requests, setRequests] = useState<ServiceRequest[]>([]);
@@ -30,6 +30,7 @@ export const RequestsTab = () => {
     const handleCloseModal = () => {
         setIsModalOpen(false);
         setSelectedRequest(null);
+        fetchRequests(); // Modal kapandığında listeyi yenile (yeni teklif bilgisini görmek için)
     };
 
     return (
@@ -40,15 +41,15 @@ export const RequestsTab = () => {
                     <TableHead>
                         <TableRow>
                             <TableCell>Başlık</TableCell>
+                            <TableCell>Kategori</TableCell>
                             <TableCell>Kullanıcı</TableCell>
                             <TableCell>Tarih</TableCell>
-                            <TableCell>Son Teklif</TableCell> {/* YENİ SÜTUN */}
+                            <TableCell>Son Teklif</TableCell>
                             <TableCell>Eylemler</TableCell>
                         </TableRow>
                     </TableHead>
                     <TableBody>
                         {requests.map((request) => {
-                            // En son teklifi bul (tarihe göre sıralı geldiğini varsayarak)
                             const lastOffer = request.offers && request.offers.length > 0 
                                 ? request.offers[request.offers.length - 1] 
                                 : null;
@@ -56,10 +57,10 @@ export const RequestsTab = () => {
                             return (
                                 <TableRow key={request.id} hover sx={{ cursor: 'pointer' }}>
                                     <TableCell onClick={() => handleOpenModal(request)}>{request.title}</TableCell>
-                                    <TableCell onClick={() => handleOpenModal(request)}>{request.user?.username || 'Bilinmiyor'}</TableCell>
+                                    <TableCell onClick={() => handleOpenModal(request)}>{request.category}</TableCell>
+                                    <TableCell onClick={() => handleOpenModal(request)}>{request.username || 'Bilinmiyor'}</TableCell>
                                     <TableCell onClick={() => handleOpenModal(request)}>{new Date(request.createdDate).toLocaleDateString()}</TableCell>
                                     <TableCell onClick={() => handleOpenModal(request)}>
-                                        {/* Son teklif varsa fiyatını göster */}
                                         {lastOffer ? `${lastOffer.price.toFixed(2)} ₺` : 'Teklif Yok'}
                                     </TableCell>
                                     <TableCell>
