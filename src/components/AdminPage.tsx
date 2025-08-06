@@ -6,6 +6,7 @@ import { RequestsTab } from './admin/RequestsTab';
 import { TradesTab } from './admin/TradesTab';
 import { QuestionsTab } from './admin/QuestionsTab';
 import { MailLogTab } from './admin/MailLogTab';
+import { UsersTab } from './admin/UsersTab';
 
 function TabPanel(props: { children?: React.ReactNode; index: number; value: number; }) {
     const { children, value, index, ...other } = props;
@@ -44,34 +45,25 @@ const AdminPage: React.FC = () => {
         <div>
             <Header />
             <Container maxWidth="lg" sx={{ mt: 4 }}>
-                <Typography variant="h4" gutterBottom align="center">Admin Paneli</Typography>
-                <Paper>
+                <Typography variant="h4" gutterBottom align="center">
+                    Admin Paneli
+                </Typography>
+                <Paper sx={{ mt: 2 }}>
                     <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
-                        <Tabs 
-                            value={tabIndex} 
-                            onChange={handleTabChange}
-                            variant="scrollable"
-                            scrollButtons="auto"
-                            allowScrollButtonsMobile
-                        >
+                        <Tabs value={tabIndex} onChange={handleTabChange} variant="scrollable" scrollButtons="auto" allowScrollButtonsMobile>
                             <Tab label="Talepler" />
+                            <Tab label="Kullanıcılar" />
                             <Tab label="Usta Tanımları" />
                             <Tab label="Soru Tanımları" />
                             <Tab label="Mail Kayıtları" />
                         </Tabs>
                     </Box>
-                    <TabPanel value={tabIndex} index={0}>
-                        <RequestsTab />
-                    </TabPanel>
-                    <TabPanel value={tabIndex} index={1}>
-                        <TradesTab />
-                    </TabPanel>
-                    <TabPanel value={tabIndex} index={2}>
-                        <QuestionsTab />
-                    </TabPanel>
-                    <TabPanel value={tabIndex} index={3}>
-                        <MailLogTab />
-                    </TabPanel>
+                    {/* DİKKAT: Her sekmeye 'active' prop'u ekliyoruz */}
+                    <TabPanel value={tabIndex} index={0}><RequestsTab active={tabIndex === 0} /></TabPanel>
+                    <TabPanel value={tabIndex} index={1}><UsersTab active={tabIndex === 1} /></TabPanel>
+                    <TabPanel value={tabIndex} index={2}><TradesTab active={tabIndex === 2} /></TabPanel>
+                    <TabPanel value={tabIndex} index={3}><QuestionsTab active={tabIndex === 3} /></TabPanel>
+                    <TabPanel value={tabIndex} index={4}><MailLogTab active={tabIndex === 4} /></TabPanel>
                 </Paper>
             </Container>
         </div>

@@ -1,23 +1,44 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Typography, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper } from '@mui/material';
+import { Box, Typography, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Pagination, CircularProgress } from '@mui/material';
 import { getMailLogsForAdmin } from '../../services/api';
-import type { MailLog } from '../../services/api';
+import type { MailLog, Page } from '../../services/api';
 
-// DİKKAT: Başına "export" eklendi.
-export const MailLogTab = () => {
-    const [logs, setLogs] = useState<MailLog[]>([]);
+interface TabProps {
+    active: boolean;
+}
+
+export const MailLogTab = ({ active }: TabProps) => {
+    const [logsPage, setLogsPage] = useState<Page<MailLog> | null>(null);
+    const [currentPage, setCurrentPage] = useState(1);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
-        const fetchLogs = async () => {
-            try {
-                const response = await getMailLogsForAdmin();
-                setLogs(response.data);
-            } catch (error) {
-                console.error("Mail logları getirilirken hata oluştu:", error);
-            }
-        };
-        fetchLogs();
-    }, []);
+        if (active) {
+            fetchLogs(currentPage - 1);
+        }
+    }, [currentPage, active]);
+
+    const fetchLogs = async (page: number) => {
+        setLoading(true);
+        setError(null);
+        try {
+            const response = await getMailLogsForAdmin(page, 10);
+            setLogsPage(response.data);
+        } catch (err) {
+            console.error("Mail logları getirilirken hata oluştu:", err);
+            setError("E-posta kayıtları yüklenirken bir hata oluştu.");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handlePageChange = (event: React.ChangeEvent<unknown>, value: number) => {
+        setCurrentPage(value);
+    };
+
+    if (loading) { return <CircularProgress />; }
+    if (error) { return <Typography color="error">{error}</Typography>; }
 
     return (
         <Box>
@@ -25,20 +46,34 @@ export const MailLogTab = () => {
             <TableContainer component={Paper}>
                 <Table>
                     <TableHead>
-                        <TableRow><TableCell>Talep ID</TableCell><TableCell>Alıcı Email</TableCell><TableCell>Konu</TableCell><TableCell>Tarih</TableCell></TableRow>
+                        <TableRow>
+                            <TableCell>Talep Başlığı</TableCell>
+                            <TableCell>Alıcı Email</TableCell>
+                            <TableCell>Konu</TableCell>
+                            <TableCell>Tarih</TableCell>
+                        </TableRow>
                     </TableHead>
                     <TableBody>
-                        {logs.map((log) => (
-                            <TableRow key={log.id}>
-                                <TableCell>{log.serviceRequest?.id || 'N/A'}</TableCell>
-                                <TableCell>{log.email}</TableCell>
-                                <TableCell>{log.subject}</TableCell>
-                                <TableCell>{new Date(log.sentDate).toLocaleString()}</TableCell>
+                        {logsPage && logsPage.content.length > 0 ? (
+                            logsPage.content.map((log) => (
+                                <TableRow key={log.id}>
+                                    <TableCell>{log.requestTitle}</TableCell>
+                                    <TableCell>{log.email}</TableCell>
+                                    <TableCell>{log.subject}</TableCell>
+                                    <TableCell>{new Date(log.sentDate).toLocaleString('tr-TR')}</TableCell>
+                                </TableRow>
+                            ))
+                        ) : (
+                            <TableRow>
+                                <TableCell colSpan={4} align="center">E-posta kaydı bulunamadı.</TableCell>
                             </TableRow>
-                        ))}
+                        )}
                     </TableBody>
                 </Table>
             </TableContainer>
+            <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2, p: 2 }}>
+                <Pagination count={logsPage?.totalPages || 0} page={currentPage} onChange={handlePageChange} color="primary" disabled={!logsPage || logsPage.totalPages === 0} />
+            </Box>
         </Box>
     );
 };

@@ -12,11 +12,11 @@ const Home: React.FC = () => {
           minHeight: 'calc(100vh - 64px)',
           display: 'flex', 
           alignItems: 'center',
-          justifyContent: { xs: 'center', md: 'flex-end' }, // Küçük ekranda ortala, büyük ekranda sağa yasla
+          justifyContent: { xs: 'center', md: 'flex-end' },
           padding: { xs: 2, md: 4 },
+          paddingRight: { md: '8%' }
         }}
       >
-        {/* DİKKAT: Genişlik daraltma geri alındı, 'md' olarak güncellendi */}
         <Container component="main" maxWidth="md">
           <Paper 
             variant="outlined" 
@@ -36,14 +36,15 @@ const Home: React.FC = () => {
                 gutterBottom
                 sx={{
                   fontWeight: 700,
-                  fontSize: { xs: '1.5rem', sm: '2rem', md: '2.5rem' }, 
+                  // Font boyutunu mobil için ayarladık
+                  fontSize: { xs: '1.6rem', sm: '2rem', md: '2.5rem' }, 
                   background: 'linear-gradient(45deg, #0D47A1 30%, #1976D2 90%)',
                   WebkitBackgroundClip: 'text',
                   WebkitTextFillColor: 'transparent',
                   paddingBottom: '0.5rem',
                 }}
               >
-                İşin Ustaları Burada
+                Usta Bulmanın En Kolay Yolu
               </Typography>
               <RequestStepper />
           </Paper>

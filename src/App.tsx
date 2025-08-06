@@ -4,21 +4,23 @@ import './App.css';
 import Home from './components/Home';
 import AdminPage from './components/AdminPage';
 import MyRequests from './components/MyRequests';
-import AboutPage from './components/AboutPage'; // Yeni import
-import ContactPage from './components/ContactPage'; // Yeni import
+import AboutPage from './components/AboutPage';
+import ContactPage from './components/ContactPage';
+import ProfilePage from './components/ProfilePage';
 import { AuthProvider } from './context/AuthContext';
 
 const App: React.FC = () => {
   return (
     <AuthProvider>
       <Router>
-        <div className="p-0"> {/* container-fluid'i kaldırdık, tam kontrol bizde */}
+        <div className="p-0">
           <Routes>
             <Route path="/" element={<Home />} />
+            <Route path="/profilim" element={<ProfilePage />} />
             <Route path="/admin" element={<AdminPage />} />
             <Route path="/taleplerim" element={<MyRequests />} />
-            <Route path="/hakkimizda" element={<AboutPage />} /> {/* Yeni Rota */}
-            <Route path="/iletisim" element={<ContactPage />} /> {/* Yeni Rota */}
+            <Route path="/hakkimizda" element={<AboutPage />} />
+            <Route path="/iletisim" element={<ContactPage />} />
           </Routes>
         </div>
       </Router>

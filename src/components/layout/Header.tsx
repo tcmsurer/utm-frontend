@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
-import { AppBar, Toolbar, Typography, Button, Modal, Box, TextField, Tabs, Tab, useTheme, useMediaQuery, IconButton, Drawer, List, ListItem, ListItemButton, ListItemText, Divider } from '@mui/material';
+import { AppBar, Toolbar, Typography, Button, Modal, Box, TextField, Tabs, Tab, useTheme, useMediaQuery, IconButton, Drawer, List, ListItem, ListItemButton, ListItemText, Divider, Menu, MenuItem } from '@mui/material';
 import { Link, useNavigate } from 'react-router-dom';
 import logo from '../../assets/banner.png';
 import MenuIcon from '@mui/icons-material/Menu';
+import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 
 const modalStyle = {
   position: 'absolute' as 'absolute',
@@ -25,8 +26,11 @@ export const Header = () => {
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [address, setAddress] = useState('');
+  const [fullName, setFullName] = useState('');
   const [error, setError] = useState('');
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const menuOpen = Boolean(anchorEl);
   
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
@@ -34,18 +38,16 @@ export const Header = () => {
   const navigate = useNavigate();
 
   const handleOpen = () => setOpen(true);
-  const handleClose = () => {
-    setOpen(false);
-    setError('');
-    setIsRegister(false);
-  };
+  const handleClose = () => { setOpen(false); setError(''); setIsRegister(false); };
+  const handleMenu = (event: React.MouseEvent<HTMLElement>) => setAnchorEl(event.currentTarget);
+  const handleMenuClose = () => setAnchorEl(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     try {
       if (isRegister) {
-        await auth.register({ username, password, email, phone, address });
+        await auth.register({ fullName, username, password, email, phone, address });
       } else {
         await auth.login({ username, password });
       }
@@ -56,25 +58,40 @@ export const Header = () => {
   };
 
   const handleLogout = () => {
+    handleMenuClose();
     auth.logout();
     navigate('/');
-  }
+  };
 
   const renderDesktopMenu = () => (
     <>
       <Button color="inherit" component={Link} to="/hakkimizda">Hakkımızda</Button>
       <Button color="inherit" component={Link} to="/iletisim">İletişim</Button>
-      
       {auth.user ? (
-        <>
-          {auth.isAdmin ? (
-            <Button color="inherit" component={Link} to="/admin">Admin (Konsol)</Button>
-          ) : (
-            <Button color="inherit" component={Link} to="/taleplerim">Taleplerim</Button>
-          )}
-          <Typography sx={{ mx: 2 }}>Hoşgeldin, {auth.user.sub}</Typography>
-          <Button color="inherit" onClick={handleLogout}>Çıkış Yap</Button>
-        </>
+        <div>
+          <Button onClick={handleMenu} color="inherit" startIcon={<AccountCircleIcon />}>
+            {auth.userProfile?.fullName || auth.user.sub}
+          </Button>
+          <Menu
+              anchorEl={anchorEl}
+              open={menuOpen}
+              onClose={handleMenuClose}
+              anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+              transformOrigin={{ vertical: 'top', horizontal: 'right' }}
+          >
+              <MenuItem disabled><Typography variant="body2">Kullanıcı: {auth.userProfile?.username}</Typography></MenuItem>
+              <MenuItem disabled><Typography variant="body2">Email: {auth.userProfile?.email}</Typography></MenuItem>
+              <Divider />
+              <MenuItem onClick={handleMenuClose} component={Link} to="/profilim">Profilim</MenuItem>
+              {auth.isAdmin ? (
+                  <MenuItem onClick={handleMenuClose} component={Link} to="/admin">Admin Konsolu</MenuItem>
+              ) : (
+                  <MenuItem onClick={handleMenuClose} component={Link} to="/taleplerim">Taleplerim</MenuItem>
+              )}
+              <Divider />
+              <MenuItem onClick={handleLogout}>Çıkış Yap</MenuItem>
+          </Menu>
+        </div>
       ) : (
         <Button color="inherit" onClick={handleOpen}>Giriş Yap / Kayıt Ol</Button>
       )}
@@ -83,52 +100,33 @@ export const Header = () => {
 
   const renderMobileMenu = () => (
     <>
-      <IconButton
-        color="inherit"
-        aria-label="open drawer"
-        edge="end"
-        onClick={() => setDrawerOpen(true)}
-      >
-        <MenuIcon />
-      </IconButton>
-      <Drawer
-        anchor="right"
-        open={drawerOpen}
-        onClose={() => setDrawerOpen(false)}
-      >
-        <Box
-          sx={{ width: 250 }}
-          role="presentation"
-          onClick={() => setDrawerOpen(false)}
-          onKeyDown={() => setDrawerOpen(false)}
-        >
+      <IconButton color="inherit" edge="end" onClick={() => setDrawerOpen(true)}><MenuIcon /></IconButton>
+      <Drawer anchor="right" open={drawerOpen} onClose={() => setDrawerOpen(false)}>
+        <Box sx={{ width: 250 }} role="presentation" onClick={() => setDrawerOpen(false)}>
           <List>
-            <ListItem disablePadding component={Link} to="/hakkimizda" sx={{color: 'inherit'}}>
-              <ListItemButton><ListItemText primary="Hakkımızda" /></ListItemButton>
-            </ListItem>
-            <ListItem disablePadding component={Link} to="/iletisim" sx={{color: 'inherit'}}>
-              <ListItemButton><ListItemText primary="İletişim" /></ListItemButton>
-            </ListItem>
+            {auth.user && auth.userProfile && (
+              <>
+                <ListItem>
+                    <ListItemText primary={auth.userProfile.fullName} secondary={auth.userProfile.email} />
+                </ListItem>
+                <Divider />
+              </>
+            )}
+            <ListItem disablePadding component={Link} to="/hakkimizda" sx={{ color: 'inherit' }}><ListItemButton><ListItemText primary="Hakkımızda" /></ListItemButton></ListItem>
+            <ListItem disablePadding component={Link} to="/iletisim" sx={{ color: 'inherit' }}><ListItemButton><ListItemText primary="İletişim" /></ListItemButton></ListItem>
             <Divider />
             {auth.user ? (
               <>
+                <ListItem disablePadding component={Link} to="/profilim" sx={{ color: 'inherit' }}><ListItemButton><ListItemText primary="Profilim" /></ListItemButton></ListItem>
                 {auth.isAdmin ? (
-                  <ListItem disablePadding component={Link} to="/admin" sx={{color: 'inherit'}}>
-                    <ListItemButton><ListItemText primary="Admin (Konsol)" /></ListItemButton>
-                  </ListItem>
+                  <ListItem disablePadding component={Link} to="/admin" sx={{ color: 'inherit' }}><ListItemButton><ListItemText primary="Admin Konsolu" /></ListItemButton></ListItem>
                 ) : (
-                  <ListItem disablePadding component={Link} to="/taleplerim" sx={{color: 'inherit'}}>
-                    <ListItemButton><ListItemText primary="Taleplerim" /></ListItemButton>
-                  </ListItem>
+                  <ListItem disablePadding component={Link} to="/taleplerim" sx={{ color: 'inherit' }}><ListItemButton><ListItemText primary="Taleplerim" /></ListItemButton></ListItem>
                 )}
-                <ListItem disablePadding onClick={handleLogout} sx={{color: 'inherit'}}>
-                  <ListItemButton><ListItemText primary="Çıkış Yap" /></ListItemButton>
-                </ListItem>
+                <ListItem disablePadding onClick={handleLogout} sx={{ color: 'inherit' }}><ListItemButton><ListItemText primary="Çıkış Yap" /></ListItemButton></ListItem>
               </>
             ) : (
-              <ListItem disablePadding onClick={handleOpen} sx={{color: 'inherit'}}>
-                <ListItemButton><ListItemText primary="Giriş Yap / Kayıt Ol" /></ListItemButton>
-              </ListItem>
+              <ListItem disablePadding onClick={handleOpen} sx={{ color: 'inherit' }}><ListItemButton><ListItemText primary="Giriş Yap / Kayıt Ol" /></ListItemButton></ListItem>
             )}
           </List>
         </Box>
@@ -141,12 +139,7 @@ export const Header = () => {
       <AppBar position="static" sx={{ background: 'linear-gradient(45deg, #2196F3 30%, #21CBF3 90%)', boxShadow: '0 3px 5px 2px rgba(33, 203, 243, .3)' }}>
         <Toolbar>
           <Box component={Link} to="/" sx={{ flexGrow: 1, display: 'flex', alignItems: 'center', textDecoration: 'none', color: 'inherit' }}>
-            <Box
-              component="img"
-              src={logo}
-              alt="Usta Merkezi Logo"
-              sx={{ height: 40, mr: 1.5 }}
-            />
+            <Box component="img" src={logo} alt="Usta Tedarik Merkezi Logo" sx={{ height: 40, mr: 1.5 }} />
             <Typography variant="h6" component="div" sx={{ fontFamily: 'Poppins', fontWeight: 'bold' }}>
               Usta Tedarik Merkezi
             </Typography>
@@ -157,7 +150,7 @@ export const Header = () => {
 
       <Modal open={open} onClose={handleClose}>
         <Box sx={modalStyle}>
-          <Tabs value={isRegister ? 1 : 0} onChange={() => setIsRegister(!isRegister)} centered>
+          <Tabs value={isRegister ? 1 : 0} onChange={(e, newValue) => setIsRegister(newValue === 1)} centered>
             <Tab label="Giriş Yap" />
             <Tab label="Kayıt Ol" />
           </Tabs>
@@ -166,12 +159,24 @@ export const Header = () => {
           </Typography>
           <Box component="form" onSubmit={handleSubmit} sx={{ mt: 1 }}>
             {error && <Typography color="error" align="center">{error}</Typography>}
-            <TextField margin="normal" required fullWidth label="Kullanıcı Adı" value={username} onChange={e => setUsername(e.target.value)} />
-            <TextField margin="normal" required fullWidth label="Şifre" type="password" value={password} onChange={e => setPassword(e.target.value)} />
+            <TextField
+              margin="normal" required fullWidth label="Kullanıcı Adı" value={username}
+              onChange={e => setUsername(e.target.value)} autoFocus
+              inputProps={{ autoCapitalize: 'none' }}
+            />
+            <TextField
+              margin="normal" required fullWidth label="Şifre" type="password"
+              value={password} onChange={e => setPassword(e.target.value)}
+            />
             {isRegister && (
               <>
-                <TextField margin="normal" required fullWidth label="Email" type="email" value={email} onChange={e => setEmail(e.target.value)} />
-                <TextField margin="normal" required fullWidth label="Telefon" value={phone} onChange={e => setPhone(e.target.value)} />
+                <TextField margin="normal" required fullWidth label="Ad Soyad" value={fullName} onChange={e => setFullName(e.target.value)} />
+                <TextField
+                  margin="normal" required fullWidth label="Email" type="email" value={email}
+                  onChange={e => setEmail(e.target.value)}
+                  inputProps={{ autoCapitalize: 'none' }}
+                />
+                <TextField margin="normal" required fullWidth label="Telefon" type="tel" value={phone} onChange={e => setPhone(e.target.value)} />
                 <TextField margin="normal" required fullWidth label="Adres" value={address} onChange={e => setAddress(e.target.value)} />
               </>
             )}

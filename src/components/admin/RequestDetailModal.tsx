@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Modal, Box, Typography, Button, TextField, List, ListItem, ListItemText, Divider, CircularProgress } from '@mui/material';
 import type { ServiceRequest } from '../../services/api';
 import { createOfferForAdmin } from '../../services/api';
@@ -8,7 +8,7 @@ const modalStyle = {
   top: '50%',
   left: '50%',
   transform: 'translate(-50%, -50%)',
-  width: 600,
+  width: { xs: '90%', sm: 600 },
   bgcolor: 'background.paper',
   border: '2px solid #000',
   boxShadow: 24,
@@ -30,6 +30,17 @@ export const RequestDetailModal = ({ request, open, onClose }: Props) => {
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
 
+    useEffect(() => {
+        // Modal her açıldığında veya request değiştiğinde state'leri sıfırla
+        if (open) {
+            setPrice(0);
+            setDetails('');
+            setLoading(false);
+            setError('');
+            setSuccess('');
+        }
+    }, [open, request]);
+
     if (!request) return null;
 
     const handleSubmitOffer = async () => {
@@ -40,7 +51,7 @@ export const RequestDetailModal = ({ request, open, onClose }: Props) => {
             await createOfferForAdmin(request.id, { price, details });
             setSuccess('Teklif başarıyla gönderildi!');
             setTimeout(() => {
-                onClose(); // Modalı kapat ve listeyi yenilemesi için ana bileşeni haberdar et
+                onClose();
             }, 2000);
         } catch (err) {
             setError('Teklif gönderilirken bir hata oluştu.');
@@ -59,7 +70,10 @@ export const RequestDetailModal = ({ request, open, onClose }: Props) => {
                 <List dense>
                     <ListItem><ListItemText primary="Başlık" secondary={request.title} /></ListItem>
                     <ListItem><ListItemText primary="Kategori" secondary={request.category} /></ListItem>
-                    <ListItem><ListItemText primary="Kullanıcı" secondary={request.username} /></ListItem>
+                    <ListItem><ListItemText primary="Müşteri Adı Soyadı" secondary={request.user.fullName} /></ListItem>
+                    <ListItem><ListItemText primary="Kullanıcı Adı" secondary={request.user.username} /></ListItem>
+                    <ListItem><ListItemText primary="E-posta" secondary={request.user.email} /></ListItem>
+                    <ListItem><ListItemText primary="Telefon" secondary={request.user.phone} /></ListItem>
                 </List>
                 
                 <Divider sx={{ my: 2 }} />

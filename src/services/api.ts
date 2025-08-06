@@ -27,91 +27,54 @@ api.interceptors.response.use(
   },
   (error) => {
     if (error.response && (error.response.status === 401 || error.response.status === 403)) {
-      localStorage.removeItem('jwt_token');
-      if (window.location.pathname !== '/') {
-          window.location.href = '/';
+      const originalRequestUrl = error.config.url;
+      if (originalRequestUrl !== '/auth/login' && originalRequestUrl !== '/auth/register') {
+        localStorage.removeItem('jwt_token');
+        if (window.location.pathname !== '/') {
+            window.location.href = '/';
+        }
       }
-      alert("Oturum süreniz doldu veya yetkiniz yok. Lütfen tekrar giriş yapın.");
     }
     return Promise.reject(error);
   }
 );
 
-// Tipleri ve DTO'ları tanımlama (Backend ile uyumlu)
-export interface Usta {
-  id: string;
-  name: string;
-}
-
-export interface Soru {
-  id: string;
-  usta: Usta;
-  question: string;
-  type: string;
-  options: string[];
-  order: number;
-}
-
-export interface Offer {
-    id: string;
-    price: number;
-    details: string;
-    createdDate: string;
-}
-
-// DİKKAT: Bu tip, backend'deki DTO ile tam uyumlu olacak şekilde güncellendi.
+export interface Page<T> { content: T[]; totalPages: number; totalElements: number; number: number; size: number; }
+export interface UserProfile { id: string; fullName: string; username: string; email: string; phone: string; address: string; }
+export interface Usta { id: string; name: string; }
+export interface Soru { id: string; usta: Usta; question: string; type: string; options: string[]; order: number; }
+export interface Offer { id: string; price: number; details: string; createdDate: string; }
+export type RequestStatus = 'OPEN' | 'CLOSED_BY_USER' | 'CLOSED_BY_ADMIN';
 export interface ServiceRequest {
   id: string;
   title: string;
-  username: string; // user objesi yerine artık sadece username
+  user: UserProfile;
   category: string;
-  details: { [key: string]: string }; // description yerine tüm detaylar burada
+  details: { [key: string]: string };
   createdDate: string;
   offers: Offer[];
+  status: RequestStatus;
 }
+export interface MailLog { id: string; requestTitle: string; email: string; subject: string; body: string; sentDate: string; }
+export interface AuthResponse { token: string; }
 
-export interface MailLog {
-    id: string;
-    serviceRequest: ServiceRequest;
-    email: string;
-    subject: string;
-    body: string;
-    sentDate: string;
-}
-
-export interface AuthResponse {
-  token: string;
-}
-
-// --- Auth Endpoints ---
 export const loginUser = (credentials: any): Promise<AxiosResponse<AuthResponse>> => api.post('/auth/login', credentials);
 export const registerUser = (details: any): Promise<AxiosResponse<AuthResponse>> => api.post('/auth/register', details);
-
-// --- Halka Açık Endpoints ---
 export const getUstalar = () => api.get<Usta[]>('/ustalar');
 export const getSorularByUsta = (ustaName: string) => api.get<Soru[]>(`/sorular/usta/${ustaName}`);
-
-// --- Kullanıcıya Özel Endpoints (Token Gerekli) ---
-export const getMyProfile = () => api.get('/me');
+export const getMyProfile = () => api.get<UserProfile>('/me');
+export const updateUserProfile = (profileData: Partial<UserProfile>) => api.put<UserProfile>('/me', profileData);
 export const getMyRequests = () => api.get<ServiceRequest[]>('/me/requests');
 export const createMyRequest = (requestData: any) => api.post('/me/requests', requestData);
-
-// --- Admin'e Özel Endpoints (Token ve Admin Rolü Gerekli) ---
-export const getAllRequestsForAdmin = () => api.get<ServiceRequest[]>('/admin/requests');
-export const getAllUsersForAdmin = () => api.get('/admin/users');
-
-// Usta yönetimi
+export const closeMyRequest = (id: string) => api.put(`/me/requests/${id}/close`);
+export const getAllRequestsForAdmin = (page: number, size: number) => api.get<Page<ServiceRequest>>('/admin/requests', { params: { page, size } });
+export const closeRequestByAdmin = (id: string) => api.put(`/admin/requests/${id}/close`);
+export const getAllUsersForAdmin = (page: number, size: number) => api.get<Page<UserProfile>>('/admin/users', { params: { page, size } });
+export const getUstalarForAdmin = (page: number, size: number) => api.get<Page<Usta>>('/admin/ustalar', { params: { page, size } });
 export const createUstaForAdmin = (ustaData: { name: string }) => api.post('/admin/ustalar', ustaData);
 export const deleteUstaForAdmin = (id: string) => api.delete(`/admin/ustalar/${id}`);
-
-// Soru yönetimi
-export const getSorularForAdmin = () => api.get<Soru[]>('/admin/sorular');
+export const getSorularForAdmin = (page: number, size: number) => api.get<Page<Soru>>('/admin/sorular', { params: { page, size } });
 export const createSoruForAdmin = (soruData: any) => api.post('/admin/sorular', soruData);
 export const deleteSoruForAdmin = (id: string) => api.delete(`/admin/sorular/${id}`);
-
-// Mail Log yönetimi
-export const getMailLogsForAdmin = () => api.get<MailLog[]>('/admin/maillogs');
-
-// Teklif yönetimi
-export const createOfferForAdmin = (requestId: string, offerData: { price: number; details: string }) => 
-    api.post(`/admin/requests/${requestId}/offers`, offerData);
+export const getMailLogsForAdmin = (page: number, size: number) => api.get<Page<MailLog>>('/admin/maillogs', { params: { page, size } });
+export const createOfferForAdmin = (requestId: string, offerData: { price: number; details: string }) => api.post(`/admin/requests/${requestId}/offers`, offerData);

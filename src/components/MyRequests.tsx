@@ -1,29 +1,30 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { Header } from './layout/Header';
-import { Container, Typography, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Button, CircularProgress, Box, Modal, List, ListItem, ListItemText, Divider } from '@mui/material';
-import { getMyRequests } from '../services/api';
+import { Container, Typography, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Button, CircularProgress, Box, Modal, List, ListItem, ListItemText, Divider, FormControlLabel, Checkbox, Chip } from '@mui/material';
+import { getMyRequests, closeMyRequest } from '../services/api';
 import type { ServiceRequest } from '../services/api';
 import { useNavigate } from 'react-router-dom';
 
 const modalStyle = {
-  position: 'absolute' as 'absolute',
-  top: '50%',
-  left: '50%',
-  transform: 'translate(-50%, -50%)',
-  width: 600,
-  bgcolor: 'background.paper',
-  border: '2px solid #000',
-  boxShadow: 24,
-  p: 4,
-  maxHeight: '90vh',
-  overflowY: 'auto'
-};
+    position: 'absolute' as 'absolute',
+    top: '50%',
+    left: '50%',
+    transform: 'translate(-50%, -50%)',
+    width: { xs: '90%', sm: 600 },
+    bgcolor: 'background.paper',
+    border: '2px solid #000',
+    boxShadow: 24,
+    p: 4,
+    maxHeight: '90vh',
+    overflowY: 'auto'
+  };
 
 const MyRequests: React.FC = () => {
-    const [requests, setRequests] = useState<ServiceRequest[]>([]);
+    const [allRequests, setAllRequests] = useState<ServiceRequest[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
+    const [showClosed, setShowClosed] = useState<boolean>(false);
     const [selectedRequest, setSelectedRequest] = useState<ServiceRequest | null>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const auth = useAuth();
@@ -34,23 +35,37 @@ const MyRequests: React.FC = () => {
             navigate('/');
             return;
         }
-
-        const fetchRequests = async () => {
-            try {
-                setLoading(true);
-                const response = await getMyRequests();
-                setRequests(response.data);
-                setError(null);
-            } catch (err) {
-                console.error("Talepler getirilirken hata:", err);
-                setError("Taleplerinizi getirirken bir sorun oluştu.");
-            } finally {
-                setLoading(false);
-            }
-        };
-
         fetchRequests();
     }, [auth.token, navigate]);
+
+    const fetchRequests = async () => {
+        setLoading(true);
+        setError(null);
+        try {
+            const response = await getMyRequests();
+            setAllRequests(response.data);
+        } catch (err) {
+            setError("Taleplerinizi getirirken bir sorun oluştu.");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleCloseRequest = async (id: string) => {
+        if (window.confirm("Bu talebi kapatmak istediğinizden emin misiniz? Bu işlem geri alınamaz.")) {
+            try {
+                await closeMyRequest(id);
+                fetchRequests();
+            } catch (error) {
+                alert("Talep kapatılırken bir hata oluştu.");
+            }
+        }
+    };
+
+    const filteredRequests = useMemo(() => {
+        if (!allRequests) return [];
+        return allRequests.filter(req => showClosed ? true : req.status === 'OPEN');
+    }, [allRequests, showClosed]);
 
     const handleOpenModal = (request: ServiceRequest) => {
         setSelectedRequest(request);
@@ -66,9 +81,7 @@ const MyRequests: React.FC = () => {
         return (
             <div>
                 <Header />
-                <Box sx={{ display: 'flex', justifyContent: 'center', mt: 5 }}>
-                    <CircularProgress />
-                </Box>
+                <CircularProgress sx={{ display: 'block', margin: 'auto', mt: 5 }} />
             </div>
         );
     }
@@ -77,46 +90,58 @@ const MyRequests: React.FC = () => {
         <div>
             <Header />
             <Container component="main" maxWidth="lg" sx={{ my: 4 }}>
-                <Paper variant="outlined" sx={{ p: { xs: 2, md: 3 }, backgroundColor: 'rgba(255, 255, 255, 0.95)' }}>
-                    <Typography component="h1" variant="h4" gutterBottom>
-                        Oluşturduğum Talepler
-                    </Typography>
+                <Paper variant="outlined" sx={{ p: { xs: 2, md: 3 } }}>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <Typography component="h1" variant="h4" gutterBottom>
+                            Oluşturduğum Talepler
+                        </Typography>
+                        <FormControlLabel
+                            control={<Checkbox checked={showClosed} onChange={(e) => setShowClosed(e.target.checked)} />}
+                            label="Kapalı Talepleri Göster"
+                        />
+                    </Box>
                     {error && <Typography color="error">{error}</Typography>}
                     <TableContainer>
                         <Table sx={{ minWidth: 650 }}>
                             <TableHead>
                                 <TableRow>
                                     <TableCell>Başlık</TableCell>
-                                    <TableCell>Kategori</TableCell>
                                     <TableCell>Oluşturulma Tarihi</TableCell>
                                     <TableCell>Durum</TableCell>
                                     <TableCell>Eylemler</TableCell>
                                 </TableRow>
                             </TableHead>
                             <TableBody>
-                                {requests.map((request) => (
-                                    <TableRow key={request.id}>
-                                        <TableCell>{request.title}</TableCell>
-                                        <TableCell>{request.category}</TableCell>
-                                        <TableCell>{new Date(request.createdDate).toLocaleDateString()}</TableCell>
-                                        <TableCell>
-                                            <Typography variant="body2" color={request.offers && request.offers.length > 0 ? 'success.main' : 'primary.main'}>
-                                                {request.offers && request.offers.length > 0 ? 'Teklif Alındı' : 'Açık'}
-                                            </Typography>
-                                        </TableCell>
-                                        <TableCell>
-                                            <Button variant="outlined" size="small" onClick={() => handleOpenModal(request)}>
-                                                Mesajları Görüntüle
-                                            </Button>
-                                        </TableCell>
+                                {filteredRequests.length > 0 ? (
+                                    filteredRequests.map((request) => (
+                                        <TableRow key={request.id} sx={{ '&:last-child td, &:last-child th': { border: 0 }, opacity: request.status !== 'OPEN' ? 0.6 : 1 }}>
+                                            <TableCell>{request.title}</TableCell>
+                                            <TableCell>{new Date(request.createdDate).toLocaleString('tr-TR')}</TableCell>
+                                            <TableCell>
+                                                <Chip label={request.status} color={request.status === 'OPEN' ? 'primary' : 'default'} size="small" />
+                                            </TableCell>
+                                            <TableCell>
+                                                <Button variant="outlined" size="small" onClick={() => handleOpenModal(request)} sx={{ mr: 1 }}>
+                                                    Detayları Görüntüle
+                                                </Button>
+                                                {request.status === 'OPEN' && (
+                                                    <Button variant="contained" color="error" size="small" onClick={() => handleCloseRequest(request.id)}>
+                                                        Talebi Kapat
+                                                    </Button>
+                                                )}
+                                            </TableCell>
+                                        </TableRow>
+                                    ))
+                                ) : (
+                                    <TableRow>
+                                        <TableCell colSpan={4} align="center">Henüz oluşturulmuş bir talebiniz yok.</TableCell>
                                     </TableRow>
-                                ))}
+                                )}
                             </TableBody>
                         </Table>
                     </TableContainer>
                 </Paper>
             </Container>
-
             <Modal open={isModalOpen} onClose={handleCloseModal}>
                 <Box sx={modalStyle}>
                     {selectedRequest && (
@@ -125,9 +150,7 @@ const MyRequests: React.FC = () => {
                             <List dense>
                                 <ListItem><ListItemText primary="Başlık" secondary={selectedRequest.title} /></ListItem>
                                 {Object.entries(selectedRequest.details).map(([question, answer]) => (
-                                    <ListItem key={question}>
-                                        <ListItemText primary={question} secondary={answer || "-"} />
-                                    </ListItem>
+                                    <ListItem key={question}><ListItemText primary={question} secondary={answer || "-"} /></ListItem>
                                 ))}
                             </List>
                             <Divider sx={{ my: 2 }} />
