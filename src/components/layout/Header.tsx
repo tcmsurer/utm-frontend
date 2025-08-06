@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
-import { AppBar, Toolbar, Typography, Button, Modal, Box, TextField, Tabs, Tab, useTheme, useMediaQuery, IconButton, Drawer, List, ListItem, ListItemButton, ListItemText, Divider, Menu, MenuItem } from '@mui/material';
+import { AppBar, Toolbar, Typography, Button, Modal, Box, TextField, Tabs, Tab, useTheme, useMediaQuery, IconButton, Drawer, List, ListItem, ListItemButton, ListItemText, Divider, Menu, MenuItem, Alert } from '@mui/material';
 import { Link, useNavigate } from 'react-router-dom';
 import logo from '../../assets/banner.png';
 import MenuIcon from '@mui/icons-material/Menu';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
+import { forgotPassword } from '../../services/api';
 
 const modalStyle = {
   position: 'absolute' as 'absolute',
@@ -21,6 +22,7 @@ const modalStyle = {
 export const Header = () => {
   const [open, setOpen] = useState(false);
   const [isRegister, setIsRegister] = useState(false);
+  const [forgotPasswordView, setForgotPasswordView] = useState(false);
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [email, setEmail] = useState('');
@@ -28,6 +30,7 @@ export const Header = () => {
   const [address, setAddress] = useState('');
   const [fullName, setFullName] = useState('');
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const menuOpen = Boolean(anchorEl);
@@ -37,14 +40,14 @@ export const Header = () => {
   const auth = useAuth();
   const navigate = useNavigate();
 
-  const handleOpen = () => setOpen(true);
-  const handleClose = () => { setOpen(false); setError(''); setIsRegister(false); };
+  const handleOpen = () => { setForgotPasswordView(false); setOpen(true); };
+  const handleClose = () => { setOpen(false); setError(''); setSuccess(''); setIsRegister(false); };
   const handleMenu = (event: React.MouseEvent<HTMLElement>) => setAnchorEl(event.currentTarget);
   const handleMenuClose = () => setAnchorEl(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
+    setError(''); setSuccess('');
     try {
       if (isRegister) {
         await auth.register({ fullName, username, password, email, phone, address });
@@ -56,13 +59,25 @@ export const Header = () => {
       setError(isRegister ? 'Kayıt başarısız oldu.' : 'Kullanıcı adı veya şifre yanlış.');
     }
   };
+  
+  const handleForgotPassword = async () => {
+        setError(''); setSuccess('');
+        try {
+            const response = await forgotPassword(email);
+            setSuccess(response.data);
+            // Başarılı mesajını 3 saniye göster ve modalı kapat
+            setTimeout(() => {
+                handleClose();
+            }, 3000);
+        } catch (err) {
+            setError("Bir hata oluştu, lütfen tekrar deneyin.");
+        }
+    };
 
-  const handleLogout = () => {
-    handleMenuClose();
-    auth.logout();
-    navigate('/');
-  };
+  const handleLogout = () => { handleMenuClose(); auth.logout(); navigate('/'); };
 
+  // DİKKAT: Fonksiyon gövdesinin parantez () ile başladığından emin olun.
+  // Bu, JSX'in otomatik olarak return edilmesini sağlar.
   const renderDesktopMenu = () => (
     <>
       <Button color="inherit" component={Link} to="/hakkimizda">Hakkımızda</Button>
@@ -73,15 +88,10 @@ export const Header = () => {
             {auth.userProfile?.fullName || auth.user.sub}
           </Button>
           <Menu
-              anchorEl={anchorEl}
-              open={menuOpen}
-              onClose={handleMenuClose}
+              anchorEl={anchorEl} open={menuOpen} onClose={handleMenuClose}
               anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
               transformOrigin={{ vertical: 'top', horizontal: 'right' }}
           >
-              <MenuItem disabled><Typography variant="body2">Kullanıcı: {auth.userProfile?.username}</Typography></MenuItem>
-              <MenuItem disabled><Typography variant="body2">Email: {auth.userProfile?.email}</Typography></MenuItem>
-              <Divider />
               <MenuItem onClick={handleMenuClose} component={Link} to="/profilim">Profilim</MenuItem>
               {auth.isAdmin ? (
                   <MenuItem onClick={handleMenuClose} component={Link} to="/admin">Admin Konsolu</MenuItem>
@@ -106,9 +116,7 @@ export const Header = () => {
           <List>
             {auth.user && auth.userProfile && (
               <>
-                <ListItem>
-                    <ListItemText primary={auth.userProfile.fullName} secondary={auth.userProfile.email} />
-                </ListItem>
+                <ListItem><ListItemText primary={auth.userProfile.fullName} secondary={auth.userProfile.email} /></ListItem>
                 <Divider />
               </>
             )}
@@ -150,40 +158,51 @@ export const Header = () => {
 
       <Modal open={open} onClose={handleClose}>
         <Box sx={modalStyle}>
-          <Tabs value={isRegister ? 1 : 0} onChange={(e, newValue) => setIsRegister(newValue === 1)} centered>
-            <Tab label="Giriş Yap" />
-            <Tab label="Kayıt Ol" />
-          </Tabs>
-          <Typography component="h1" variant="h5" sx={{ mt: 2, textAlign: 'center' }}>
-            {isRegister ? 'Kayıt Ol' : 'Giriş Yap'}
-          </Typography>
-          <Box component="form" onSubmit={handleSubmit} sx={{ mt: 1 }}>
-            {error && <Typography color="error" align="center">{error}</Typography>}
-            <TextField
-              margin="normal" required fullWidth label="Kullanıcı Adı" value={username}
-              onChange={e => setUsername(e.target.value)} autoFocus
-              inputProps={{ autoCapitalize: 'none' }}
-            />
-            <TextField
-              margin="normal" required fullWidth label="Şifre" type="password"
-              value={password} onChange={e => setPassword(e.target.value)}
-            />
-            {isRegister && (
-              <>
-                <TextField margin="normal" required fullWidth label="Ad Soyad" value={fullName} onChange={e => setFullName(e.target.value)} />
-                <TextField
-                  margin="normal" required fullWidth label="Email" type="email" value={email}
-                  onChange={e => setEmail(e.target.value)}
-                  inputProps={{ autoCapitalize: 'none' }}
-                />
-                <TextField margin="normal" required fullWidth label="Telefon" type="tel" value={phone} onChange={e => setPhone(e.target.value)} />
-                <TextField margin="normal" required fullWidth label="Adres" value={address} onChange={e => setAddress(e.target.value)} />
-              </>
-            )}
-            <Button type="submit" fullWidth variant="contained" sx={{ mt: 3, mb: 2 }}>
-              {isRegister ? 'Kayıt Ol' : 'Giriş Yap'}
-            </Button>
-          </Box>
+          {success && <Alert severity="success" sx={{ mb: 2 }}>{success}</Alert>}
+          {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+
+          {forgotPasswordView ? (
+            <>
+              <Typography component="h1" variant="h5">Şifremi Unuttum</Typography>
+              <TextField margin="normal" required fullWidth label="Kayıtlı Email Adresiniz" type="email" value={email} onChange={e => setEmail(e.target.value)} autoFocus/>
+              <Button onClick={handleForgotPassword} fullWidth variant="contained" sx={{ mt: 3, mb: 2 }}>
+                  Sıfırlama Linki Gönder
+              </Button>
+              <Button size="small" onClick={() => { setForgotPasswordView(false); setError(''); setSuccess(''); }}>Giriş Yap'a Geri Dön</Button>
+            </>
+          ) : (
+            <>
+              <Tabs value={isRegister ? 1 : 0} onChange={(e, newValue) => setIsRegister(newValue === 1)} centered>
+                  <Tab label="Giriş Yap" />
+                  <Tab label="Kayıt Ol" />
+              </Tabs>
+              <Typography component="h1" variant="h5" sx={{ mt: 2, textAlign: 'center' }}>
+                  {isRegister ? 'Kayıt Ol' : 'Giriş Yap'}
+              </Typography>
+              <Box component="form" onSubmit={handleSubmit} sx={{ mt: 1 }}>
+                  <TextField margin="normal" required fullWidth label="Kullanıcı Adı" value={username} onChange={e => setUsername(e.target.value)} inputProps={{ autoCapitalize: 'none' }} />
+                  <TextField margin="normal" required fullWidth label="Şifre" type="password" value={password} onChange={e => setPassword(e.target.value)} />
+                  {isRegister && (
+                      <>
+                          <TextField margin="normal" required fullWidth label="Ad Soyad" value={fullName} onChange={e => setFullName(e.target.value)} />
+                          <TextField margin="normal" required fullWidth label="Email" type="email" value={email} onChange={e => setEmail(e.target.value)} inputProps={{ autoCapitalize: 'none' }} />
+                          <TextField margin="normal" required fullWidth label="Telefon" type="tel" value={phone} onChange={e => setPhone(e.target.value)} />
+                          <TextField margin="normal" required fullWidth label="Adres" value={address} onChange={e => setAddress(e.target.value)} />
+                      </>
+                  )}
+                  <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
+                    {!isRegister && (
+                        <Button onClick={() => { setForgotPasswordView(true); setError(''); setSuccess(''); }} size="small" sx={{ mt: 1, textTransform: 'none' }}>
+                            Şifremi unuttum
+                        </Button>
+                    )}
+                  </Box>
+                  <Button type="submit" fullWidth variant="contained" sx={{ mt: 1, mb: 2 }}>
+                      {isRegister ? 'Kayıt Ol' : 'Giriş Yap'}
+                  </Button>
+              </Box>
+            </>
+          )}
         </Box>
       </Modal>
     </>

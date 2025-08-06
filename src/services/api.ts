@@ -45,28 +45,31 @@ export interface Usta { id: string; name: string; }
 export interface Soru { id: string; usta: Usta; question: string; type: string; options: string[]; order: number; }
 export interface Offer { id: string; price: number; details: string; createdDate: string; }
 export type RequestStatus = 'OPEN' | 'CLOSED_BY_USER' | 'CLOSED_BY_ADMIN';
-export interface ServiceRequest {
-  id: string;
-  title: string;
-  user: UserProfile;
-  category: string;
-  details: { [key: string]: string };
-  createdDate: string;
-  offers: Offer[];
-  status: RequestStatus;
-}
+export interface ServiceRequest { id: string; title: string; user: UserProfile; category: string; details: { [key: string]: string }; createdDate: string; offers: Offer[]; status: RequestStatus; }
 export interface MailLog { id: string; requestTitle: string; email: string; subject: string; body: string; sentDate: string; }
 export interface AuthResponse { token: string; }
 
+// --- API Fonksiyonları ---
+
+// Auth
 export const loginUser = (credentials: any): Promise<AxiosResponse<AuthResponse>> => api.post('/auth/login', credentials);
 export const registerUser = (details: any): Promise<AxiosResponse<AuthResponse>> => api.post('/auth/register', details);
+export const forgotPassword = (email: string) => api.post('/auth/forgot-password', { email });
+export const resetPassword = (token: string, password: string) => api.post('/auth/reset-password', { token, password });
+
+// Halka Açık
 export const getUstalar = () => api.get<Usta[]>('/ustalar');
 export const getSorularByUsta = (ustaName: string) => api.get<Soru[]>(`/sorular/usta/${ustaName}`);
+
+// Kullanıcıya Özel
 export const getMyProfile = () => api.get<UserProfile>('/me');
 export const updateUserProfile = (profileData: Partial<UserProfile>) => api.put<UserProfile>('/me', profileData);
+export const changePassword = (passwords: any) => api.put('/me/change-password', passwords);
 export const getMyRequests = () => api.get<ServiceRequest[]>('/me/requests');
 export const createMyRequest = (requestData: any) => api.post('/me/requests', requestData);
 export const closeMyRequest = (id: string) => api.put(`/me/requests/${id}/close`);
+
+// Admin'e Özel
 export const getAllRequestsForAdmin = (page: number, size: number) => api.get<Page<ServiceRequest>>('/admin/requests', { params: { page, size } });
 export const closeRequestByAdmin = (id: string) => api.put(`/admin/requests/${id}/close`);
 export const getAllUsersForAdmin = (page: number, size: number) => api.get<Page<UserProfile>>('/admin/users', { params: { page, size } });
