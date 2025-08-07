@@ -1,9 +1,9 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { Header } from './layout/Header';
-import { Container, Typography, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Button, CircularProgress, Box, Modal, List, ListItem, ListItemText, Divider, FormControlLabel, Checkbox, Chip } from '@mui/material';
-import { getMyRequests, closeMyRequest } from '../services/api';
-import type { ServiceRequest } from '../services/api';
+import { Container, Typography, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Button, CircularProgress, Box, Modal, List, ListItem, ListItemText, Divider, FormControlLabel, Checkbox, Chip, TextField } from '@mui/material';
+import { getMyRequests, closeMyRequest, getRepliesForRequest, postUserReply } from '../services/api';
+import type { ServiceRequest, Reply } from '../services/api';
 import { useNavigate } from 'react-router-dom';
 
 const modalStyle = {
@@ -13,7 +13,8 @@ const modalStyle = {
     transform: 'translate(-50%, -50%)',
     width: { xs: '90%', sm: 600 },
     bgcolor: 'background.paper',
-    border: '2px solid #000',
+    border: '1px solid #ddd',
+    borderRadius: '8px',
     boxShadow: 24,
     p: 4,
     maxHeight: '90vh',
@@ -27,16 +28,29 @@ const MyRequests: React.FC = () => {
     const [showClosed, setShowClosed] = useState<boolean>(false);
     const [selectedRequest, setSelectedRequest] = useState<ServiceRequest | null>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [replies, setReplies] = useState<Reply[]>([]);
+    const [newReply, setNewReply] = useState('');
     const auth = useAuth();
     const navigate = useNavigate();
+    const chatEndRef = useRef<null | HTMLDivElement>(null);
+
+    const scrollToBottom = () => {
+        chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    };
 
     useEffect(() => {
-        if (!auth.token) {
-            navigate('/');
-            return;
+        if (!auth.token) { 
+            navigate('/'); 
+            return; 
         }
         fetchRequests();
     }, [auth.token, navigate]);
+
+    useEffect(() => {
+        if (isModalOpen) {
+            scrollToBottom();
+        }
+    }, [replies, isModalOpen]);
 
     const fetchRequests = async () => {
         setLoading(true);
@@ -64,17 +78,38 @@ const MyRequests: React.FC = () => {
 
     const filteredRequests = useMemo(() => {
         if (!allRequests) return [];
-        return allRequests.filter(req => showClosed ? true : req.status === 'OPEN');
+        return allRequests.sort((a, b) => new Date(b.createdDate).getTime() - new Date(a.createdDate).getTime())
+                          .filter(req => showClosed ? true : req.status === 'OPEN');
     }, [allRequests, showClosed]);
 
-    const handleOpenModal = (request: ServiceRequest) => {
+    const handleOpenModal = async (request: ServiceRequest) => {
         setSelectedRequest(request);
+        try {
+            const response = await getRepliesForRequest(request.id);
+            setReplies(response.data);
+        } catch(err) {
+            console.error("Mesajlar getirilirken hata oluştu.", err);
+            setReplies([]);
+        }
         setIsModalOpen(true);
     };
 
     const handleCloseModal = () => {
         setIsModalOpen(false);
         setSelectedRequest(null);
+        setReplies([]);
+        setNewReply('');
+    };
+    
+    const handleSendReply = async () => {
+        if (!newReply.trim() || !selectedRequest) return;
+        try {
+            const response = await postUserReply(selectedRequest.id, newReply);
+            setReplies(prevReplies => [...prevReplies, response.data]);
+            setNewReply('');
+        } catch (err) {
+            alert("Mesaj gönderilirken bir hata oluştu.");
+        }
     };
 
     if (loading) {
@@ -122,7 +157,7 @@ const MyRequests: React.FC = () => {
                                             </TableCell>
                                             <TableCell>
                                                 <Button variant="outlined" size="small" onClick={() => handleOpenModal(request)} sx={{ mr: 1 }}>
-                                                    Detayları Görüntüle
+                                                    Detay & Mesajlar
                                                 </Button>
                                                 {request.status === 'OPEN' && (
                                                     <Button variant="contained" color="error" size="small" onClick={() => handleCloseRequest(request.id)}>
@@ -148,7 +183,6 @@ const MyRequests: React.FC = () => {
                         <>
                             <Typography variant="h5">Talep Detayı</Typography>
                             <List dense>
-                                <ListItem><ListItemText primary="Başlık" secondary={selectedRequest.title} /></ListItem>
                                 {Object.entries(selectedRequest.details).map(([question, answer]) => (
                                     <ListItem key={question}><ListItemText primary={question} secondary={answer || "-"} /></ListItem>
                                 ))}
@@ -166,10 +200,39 @@ const MyRequests: React.FC = () => {
                                         </ListItem>
                                     ))}
                                 </List>
-                            ) : (
-                                <Typography>Henüz bir teklif almadınız.</Typography>
-                            )}
-                             <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
+                            ) : ( <Typography>Henüz bir teklif almadınız.</Typography> )}
+                             <Divider sx={{ my: 2 }} />
+                            <Typography variant="h6" sx={{ mb: 1 }}>Mesajlaşma</Typography>
+                            <Paper variant="outlined" sx={{ p: 2 }}>
+                                <Box sx={{ height: '300px', overflowY: 'auto', mb: 2, p: 2, background: '#ECE5DD', borderRadius: 1, display: 'flex', flexDirection: 'column' }}>
+                                    {replies.map(reply => {
+                                        const isMyMessage = reply.senderUsername === auth.user?.sub;
+                                        return (
+                                            <Box key={reply.id} sx={{ alignSelf: isMyMessage ? 'flex-end' : 'flex-start', maxWidth: '80%', my: 0.5 }}>
+                                                <Paper sx={{
+                                                    p: 1.5,
+                                                    borderRadius: isMyMessage ? '10px 0 10px 10px' : '0 10px 10px 10px',
+                                                    backgroundColor: isMyMessage ? '#DCF8C6' : '#FFFFFF',
+                                                }}>
+                                                    <Typography variant="caption" display="block" sx={{ fontWeight: 'bold', color: isMyMessage ? '#4CAF50' : '#1976D2' }}>
+                                                        {reply.senderUsername}
+                                                    </Typography>
+                                                    <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>{reply.text}</Typography>
+                                                    <Typography variant="caption" display="block" sx={{ color: 'text.secondary', textAlign: 'right', fontSize: '0.65rem', mt: 0.5 }}>
+                                                        {new Date(reply.date).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}
+                                                    </Typography>
+                                                </Paper>
+                                            </Box>
+                                        );
+                                    })}
+                                    <div ref={chatEndRef} />
+                                </Box>
+                                <Box sx={{ display: 'flex', gap: 1 }}>
+                                    <TextField fullWidth size="small" label="Cevap yaz..." value={newReply} onChange={e => setNewReply(e.target.value)} onKeyPress={(e) => e.key === 'Enter' && handleSendReply()}/>
+                                    <Button variant="contained" onClick={handleSendReply}>Gönder</Button>
+                                </Box>
+                            </Paper>
+                            <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
                                 <Button onClick={handleCloseModal}>Kapat</Button>
                             </Box>
                         </>

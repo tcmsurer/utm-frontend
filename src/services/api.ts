@@ -39,6 +39,13 @@ api.interceptors.response.use(
   }
 );
 
+export interface Reply {
+    id: string;
+    senderUsername: string;
+    text: string;
+    date: string;
+}
+
 export interface Page<T> { content: T[]; totalPages: number; totalElements: number; number: number; size: number; }
 export interface UserProfile { id: string; fullName: string; username: string; email: string; phone: string; address: string; }
 export interface Usta { id: string; name: string; }
@@ -80,4 +87,14 @@ export const getSorularForAdmin = (page: number, size: number) => api.get<Page<S
 export const createSoruForAdmin = (soruData: any) => api.post('/admin/sorular', soruData);
 export const deleteSoruForAdmin = (id: string) => api.delete(`/admin/sorular/${id}`);
 export const getMailLogsForAdmin = (page: number, size: number) => api.get<Page<MailLog>>('/admin/maillogs', { params: { page, size } });
-export const createOfferForAdmin = (requestId: string, offerData: { price: number; details: string }) => api.post(`/admin/requests/${requestId}/offers`, offerData);
+
+// Teklif yönetimi
+export const createOfferForAdmin = (requestId: string, offerData: { price: number; details: string }) => 
+    api.post(`/admin/requests/${requestId}/offers`, offerData);
+export const updateOfferForAdmin = (offerId: string, price: number) => 
+    api.put(`/admin/offers/${offerId}`, { price });
+
+// Mesajlaşma API'leri
+export const getRepliesForRequest = (requestId: string) => api.get<Reply[]>(`/requests/${requestId}/replies`);
+export const postUserReply = (requestId: string, text: string) => api.post<Reply>(`/me/requests/${requestId}/replies`, { text });
+export const postAdminReply = (requestId: string, text: string) => api.post<Reply>(`/admin/requests/${requestId}/replies`, { text });
