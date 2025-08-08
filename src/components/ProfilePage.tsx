@@ -31,7 +31,13 @@ const ProfilePage: React.FC = () => {
             });
             setLoading(false);
         } else if (!auth.token && auth.userProfile === null) {
-            navigate('/');
+            // AuthContext'in ilk yüklemesi bitene kadar bekle, sonra karar ver
+            const timer = setTimeout(() => {
+                if (!localStorage.getItem('jwt_token')) {
+                    navigate('/');
+                }
+            }, 500);
+            return () => clearTimeout(timer);
         }
     }, [auth.userProfile, auth.token, navigate]);
 
