@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Stepper, Step, StepLabel, Button, Typography, Box, Select, MenuItem, TextField, FormControl, InputLabel, Divider } from '@mui/material';
+import { Stepper, Step, StepLabel, Button, Typography, Box, Select, MenuItem, TextField, FormControl, InputLabel, Divider, Alert } from '@mui/material';
+import { Link } from 'react-router-dom';
 import { getUstalar, getSorularByUsta, createMyRequest } from '../services/api';
 import type { Usta, Soru } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 
-const steps = ['Usta Seçimi', 'İş Detayları', 'Ek Bilgiler', 'Onay'];
+const steps = ['Usta Seçimi', 'İş Detayları', 'Adres ve Ek Bilgiler', 'Onay'];
 
 const formInputStyle = {
     '& .MuiOutlinedInput-root': {
@@ -39,16 +40,22 @@ export const RequestStepper = () => {
     const [selectedUsta, setSelectedUsta] = useState<string>('');
     const [sorular, setSorular] = useState<Soru[]>([]);
     const [answers, setAnswers] = useState<{ [key: string]: string }>({});
-
+    const [workAddress, setWorkAddress] = useState('');
     const auth = useAuth();
 
     useEffect(() => {
         getUstalar().then(response => setUstalar(response.data));
     }, []);
 
+    useEffect(() => {
+        if (auth.userProfile?.address) {
+            setWorkAddress(auth.userProfile.address);
+        }
+    }, [auth.userProfile]);
+
     const handleUstaSelect = (ustaName: string) => {
         setSelectedUsta(ustaName);
-        setAnswers({}); 
+        setAnswers({});
         if (ustaName) {
             getSorularByUsta(ustaName).then(response => setSorular(response.data));
         } else {
@@ -64,11 +71,18 @@ export const RequestStepper = () => {
     const handleBack = () => setActiveStep(prev => prev - 1);
 
     const handleSubmit = async () => {
-        if (!auth.user) {
-            alert("Talebi göndermek için lütfen giriş yapın veya kayıt olun.");
+        if (!auth.user || !auth.userProfile?.emailVerified) {
+            alert("Talep göndermek için giriş yapmanız ve e-postanızı doğrulamanız gerekmektedir.");
             return;
         }
-        const requestData = { title: `Usta Talebi: ${selectedUsta}`, category: selectedUsta, details: answers };
+
+        const requestData = {
+            title: `Usta Talebi: ${selectedUsta}`,
+            category: selectedUsta,
+            details: answers,
+            address: workAddress,
+        };
+
         try {
             await createMyRequest(requestData);
             handleNext();
@@ -84,7 +98,12 @@ export const RequestStepper = () => {
                     <Box sx={{ minWidth: 120, my: 4, display: 'flex', justifyContent: 'center' }}>
                         <FormControl fullWidth sx={{ ...formInputStyle, maxWidth: '500px' }}>
                             <InputLabel id="usta-select-label">Bir Usta Seçin</InputLabel>
-                            <Select labelId="usta-select-label" value={selectedUsta} label="Bir Usta Seçin" onChange={e => handleUstaSelect(e.target.value as string)}>
+                            <Select
+                                labelId="usta-select-label"
+                                value={selectedUsta}
+                                label="Bir Usta Seçin"
+                                onChange={e => handleUstaSelect(e.target.value as string)}
+                            >
                                 <MenuItem value=""><em>Usta Seçiniz</em></MenuItem>
                                 {ustalar.map(usta => <MenuItem key={usta.id} value={usta.name}>{usta.name}</MenuItem>)}
                             </Select>
@@ -115,8 +134,27 @@ export const RequestStepper = () => {
                 const finalQuestion = `'${selectedUsta}' başka neyi bilmeli / neye dikkat etmeli?`;
                 return (
                      <Box>
+                         <Typography variant="h6" sx={{ mb: 2 }}>İşin Yapılacağı Adres</Typography>
+                         <TextField
+                            sx={{ ...formInputStyle, mb: 3 }}
+                            label="İşlemin Yapılacağı Adres"
+                            multiline
+                            rows={3}
+                            fullWidth
+                            variant="outlined"
+                            value={workAddress}
+                            onChange={e => setWorkAddress(e.target.value)}
+                         />
                          <Typography variant="h6" sx={{ mb: 2 }}>Eklemek İstedikleriniz</Typography>
-                         <TextField sx={formInputStyle} label={finalQuestion} multiline rows={4} fullWidth variant="outlined" onChange={e => handleAnswerChange('Ek Notlar', e.target.value)} />
+                         <TextField
+                            sx={formInputStyle}
+                            label={finalQuestion}
+                            multiline
+                            rows={4}
+                            fullWidth
+                            variant="outlined"
+                            onChange={e => handleAnswerChange('Ek Notlar', e.target.value)}
+                         />
                      </Box>
                 );
             case 3:
@@ -124,9 +162,20 @@ export const RequestStepper = () => {
                     <Box>
                         <Typography variant="h6">Talep Özeti</Typography>
                         <Typography><b>Usta:</b> {selectedUsta}</Typography>
+                        <Typography><b>Adres:</b> {workAddress}</Typography>
                         {Object.entries(answers).map(([q, a]) => <Typography key={q}><b>{q}:</b> {a || '-'}</Typography>)}
                         <Divider sx={{ my: 2 }}/>
-                        {auth.user ? <Typography>Talebiniz, <b>{auth.user.sub}</b> hesabınızla gönderilecektir.</Typography> : <Typography color="error">Talebi gönderebilmek için lütfen yukarıdan giriş yapın veya kayıt olun.</Typography>}
+                        {auth.user ? (
+                            auth.userProfile?.emailVerified ? (
+                                <Typography>Talebiniz, <b>{auth.user.sub}</b> hesabınızla gönderilecektir.</Typography>
+                            ) : (
+                                <Alert severity="warning">
+                                    Talep gönderebilmek için e-posta adresinizi doğrulamanız gerekmektedir. Lütfen <Link to="/profilim">profil</Link> sayfanızdan doğrulama işlemini tamamlayın.
+                                </Alert>
+                            )
+                        ) : (
+                            <Typography color="error">Talebi gönderebilmek için lütfen yukarıdan giriş yapın veya kayıt olun.</Typography>
+                        )}
                     </Box>
                 );
             default:
@@ -135,7 +184,9 @@ export const RequestStepper = () => {
     };
 
     const isNextButtonDisabled = () => {
-        if (activeStep === 0) return !selectedUsta;
+        if (activeStep === 0) {
+            return !selectedUsta;
+        }
         if (activeStep === 1) {
             const validAnswersCount = Object.values(answers).filter(answer => answer && answer.toString().trim() !== '').length;
             return validAnswersCount < sorular.length;
@@ -146,8 +197,13 @@ export const RequestStepper = () => {
     return (
       <Box sx={{ width: '100%' }}>
           <Stepper activeStep={activeStep} alternativeLabel>
-              {steps.map((label) => (<Step key={label}><StepLabel>{label}</StepLabel></Step>))}
+              {steps.map((label) => (
+                  <Step key={label}>
+                      <StepLabel>{label}</StepLabel>
+                  </Step>
+              ))}
           </Stepper>
+
           {activeStep === steps.length ? (
               <Box sx={{ textAlign: 'center', my: 4 }}>
                   <Typography variant="h5">Talebiniz Alınmıştır!</Typography>
@@ -156,14 +212,16 @@ export const RequestStepper = () => {
               </Box>
           ) : (
               <>
-                  <Box sx={{ mt: 3, mb: 2, p: { xs: 2, md: 3 }, borderRadius: 2, minHeight: 250 }}>
+                  <Box sx={{ mt: 3, mb: 2, p: { xs: 2, md: 4 } }}>
                       {getStepContent(activeStep)}
                   </Box>
                   <Box sx={{ display: 'flex', flexDirection: 'row', pt: 2 }}>
                       <Button color="inherit" disabled={activeStep === 0} onClick={handleBack} sx={{ mr: 1 }}>Geri</Button>
                       <Box sx={{ flex: '1 1 auto' }} />
                       {activeStep === steps.length - 1 ? (
-                          <Button onClick={handleSubmit} variant="contained" color="primary" disabled={!auth.user}>Talebi Gönder</Button>
+                          <Button onClick={handleSubmit} variant="contained" color="primary" disabled={!auth.user || !auth.userProfile?.emailVerified}>
+                              Talebi Gönder
+                          </Button>
                       ) : (
                           <Button onClick={handleNext} variant="contained" disabled={isNextButtonDisabled()}>İleri</Button>
                       )}

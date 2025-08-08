@@ -183,6 +183,14 @@ const MyRequests: React.FC = () => {
                         <>
                             <Typography variant="h5">Talep Detayı</Typography>
                             <List dense>
+                                <ListItem>
+                                    <ListItemText 
+                                        primary="İşin Yapılacağı Adres" 
+                                        secondary={selectedRequest.address} 
+                                        sx={{ whiteSpace: 'pre-wrap' }}
+                                    />
+                                </ListItem>
+                                <Divider sx={{ my: 1 }} />
                                 {Object.entries(selectedRequest.details).map(([question, answer]) => (
                                     <ListItem key={question}><ListItemText primary={question} secondary={answer || "-"} /></ListItem>
                                 ))}

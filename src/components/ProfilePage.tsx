@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { Container, Typography, Paper, Box, TextField, Button, CircularProgress, Snackbar, Alert, Divider, Accordion, AccordionSummary, AccordionDetails } from '@mui/material';
+import { Container, Typography, Paper, Box, TextField, Button, CircularProgress, Snackbar, Alert, Divider, Accordion, AccordionSummary, AccordionDetails, Chip } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import ErrorIcon from '@mui/icons-material/Error';
 import { Header } from './layout/Header';
-import { updateUserProfile, changePassword } from '../services/api';
+import { updateUserProfile, changePassword, resendVerificationEmail } from '../services/api';
 import type { UserProfile } from '../services/api';
 import { useNavigate } from 'react-router-dom';
 
@@ -69,6 +71,16 @@ const ProfilePage: React.FC = () => {
         }
     };
     
+    const handleResendVerification = async () => {
+        setSuccess(''); setError('');
+        try {
+            const response = await resendVerificationEmail();
+            setSuccess(response.data);
+        } catch (err: any) {
+            setError(err.response?.data || "Link gönderilirken bir hata oluştu.");
+        }
+    };
+
     if (loading) { return <><Header /><CircularProgress sx={{ display: 'block', margin: 'auto', mt: 5 }} /></>; }
 
     return (
@@ -81,7 +93,28 @@ const ProfilePage: React.FC = () => {
                     </Typography>
                     <Box component="form" onSubmit={handleSubmit}>
                         <TextField label="Kullanıcı Adı" value={auth.userProfile?.username || ''} fullWidth margin="normal" disabled />
-                        <TextField label="E-posta" value={auth.userProfile?.email || ''} fullWidth margin="normal" disabled />
+                        <TextField
+                            label="E-posta"
+                            value={auth.userProfile?.email || ''}
+                            fullWidth
+                            margin="normal"
+                            disabled
+                            InputProps={{
+                                endAdornment: (
+                                    <Chip 
+                                        icon={auth.userProfile?.emailVerified ? <CheckCircleIcon /> : <ErrorIcon />}
+                                        label={auth.userProfile?.emailVerified ? "Doğrulandı" : "Doğrulanmadı"}
+                                        color={auth.userProfile?.emailVerified ? "success" : "warning"}
+                                        size="small"
+                                    />
+                                )
+                            }}
+                        />
+                        {!auth.userProfile?.emailVerified && (
+                            <Button onClick={handleResendVerification} fullWidth>
+                                Doğrulama Linkini Tekrar Gönder
+                            </Button>
+                        )}
                         <TextField label="Ad Soyad" name="fullName" value={formData.fullName} onChange={handleChange} fullWidth margin="normal" required />
                         <TextField label="Telefon" name="phone" value={formData.phone} onChange={handleChange} fullWidth margin="normal" required />
                         <TextField label="Adres" name="address" value={formData.address} onChange={handleChange} fullWidth margin="normal" multiline rows={3} required />
@@ -90,32 +123,26 @@ const ProfilePage: React.FC = () => {
                         </Button>
                     </Box>
                 </Paper>
-
-                {/* DİKKAT: Accordion ve AccordionSummary stilleri güncellendi */}
-                <Accordion sx={{ mt: 3, boxShadow: 'none', '&:before': { display: 'none' }, border: '1px solid rgba(0, 0, 0, 0.12)', borderRadius: 1 }}>
+                 <Accordion sx={{ mt: 3, boxShadow: 'none', '&:before': { display: 'none' }, border: '1px solid rgba(0, 0, 0, 0.12)', borderRadius: 1 }}>
                     <AccordionSummary
                         expandIcon={<ExpandMoreIcon />}
-                        sx={{
-                            backgroundColor: 'rgba(0, 0, 0, 0.03)',
-                            '& .MuiAccordionSummary-content': {
-                                margin: '12px 0',
-                            },
-                        }}
+                        aria-controls="panel1a-content"
+                        id="panel1a-header"
+                        sx={{ backgroundColor: 'rgba(0, 0, 0, 0.03)' }}
                     >
                         <Typography variant="h6">Şifre Değiştir</Typography>
                     </AccordionSummary>
-                    <AccordionDetails sx={{ p: 2 }}>
+                    <AccordionDetails>
                         <Box component="form" onSubmit={handlePasswordChange}>
                             <TextField label="Mevcut Şifre" type="password" value={oldPassword} onChange={(e) => setOldPassword(e.target.value)} fullWidth margin="normal" required />
                             <TextField label="Yeni Şifre" type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} fullWidth margin="normal" required />
                             <TextField label="Yeni Şifre (Tekrar)" type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} fullWidth margin="normal" required />
-                            <Button type="submit" variant="contained" color="primary" fullWidth disabled={submitting} sx={{ mt: 2 }}>
-                                {submitting ? <CircularProgress size={24} /> : 'Şifreyi Değiştir'}
+                            <Button type="submit" variant="contained" color="secondary" fullWidth disabled={submitting} sx={{ mt: 2 }}>
+                                {submitting ? <CircularProgress size={24} /> : 'Yeni Şifreyi Kaydet'}
                             </Button>
                         </Box>
                     </AccordionDetails>
                 </Accordion>
-
             </Container>
             <Snackbar open={!!success} autoHideDuration={6000} onClose={() => setSuccess('')}>
                 <Alert onClose={() => setSuccess('')} severity="success" sx={{ width: '100%' }}>{success}</Alert>

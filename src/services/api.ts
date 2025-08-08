@@ -39,44 +39,50 @@ api.interceptors.response.use(
   }
 );
 
-export interface Reply {
-    id: string;
-    senderUsername: string;
-    text: string;
-    date: string;
-}
-
 export interface Page<T> { content: T[]; totalPages: number; totalElements: number; number: number; size: number; }
-export interface UserProfile { id: string; fullName: string; username: string; email: string; phone: string; address: string; }
+export interface UserProfile { 
+    id: string; 
+    fullName: string; 
+    username: string; 
+    email: string; 
+    phone: string; 
+    address: string;
+    emailVerified: boolean; // Yeni alan
+}
 export interface Usta { id: string; name: string; }
 export interface Soru { id: string; usta: Usta; question: string; type: string; options: string[]; order: number; }
 export interface Offer { id: string; price: number; details: string; createdDate: string; }
 export type RequestStatus = 'OPEN' | 'CLOSED_BY_USER' | 'CLOSED_BY_ADMIN';
-export interface ServiceRequest { id: string; title: string; user: UserProfile; category: string; details: { [key: string]: string }; createdDate: string; offers: Offer[]; status: RequestStatus; }
+export interface ServiceRequest {
+  id: string;
+  title: string;
+  user: UserProfile;
+  category: string;
+  details: { [key: string]: string };
+  address: string;
+  createdDate: string;
+  offers: Offer[];
+  status: RequestStatus;
+}
 export interface MailLog { id: string; requestTitle: string; email: string; subject: string; body: string; sentDate: string; }
 export interface AuthResponse { token: string; }
+export interface Reply { id: string; senderUsername: string; text: string; date: string; }
 
-// --- API Fonksiyonları ---
-
-// Auth
 export const loginUser = (credentials: any): Promise<AxiosResponse<AuthResponse>> => api.post('/auth/login', credentials);
 export const registerUser = (details: any): Promise<AxiosResponse<AuthResponse>> => api.post('/auth/register', details);
 export const forgotPassword = (email: string) => api.post('/auth/forgot-password', { email });
 export const resetPassword = (token: string, password: string) => api.post('/auth/reset-password', { token, password });
-
-// Halka Açık
 export const getUstalar = () => api.get<Usta[]>('/ustalar');
 export const getSorularByUsta = (ustaName: string) => api.get<Soru[]>(`/sorular/usta/${ustaName}`);
 
 // Kullanıcıya Özel
 export const getMyProfile = () => api.get<UserProfile>('/me');
 export const updateUserProfile = (profileData: Partial<UserProfile>) => api.put<UserProfile>('/me', profileData);
-export const changePassword = (passwords: any) => api.put('/me/change-password', passwords);
+export const changePassword = (passwords: any) => api.post('/me/change-password', passwords);
+export const resendVerificationEmail = () => api.post('/me/resend-verification-email');
 export const getMyRequests = () => api.get<ServiceRequest[]>('/me/requests');
 export const createMyRequest = (requestData: any) => api.post('/me/requests', requestData);
 export const closeMyRequest = (id: string) => api.put(`/me/requests/${id}/close`);
-
-// Admin'e Özel
 export const getAllRequestsForAdmin = (page: number, size: number) => api.get<Page<ServiceRequest>>('/admin/requests', { params: { page, size } });
 export const closeRequestByAdmin = (id: string) => api.put(`/admin/requests/${id}/close`);
 export const getAllUsersForAdmin = (page: number, size: number) => api.get<Page<UserProfile>>('/admin/users', { params: { page, size } });
@@ -87,14 +93,9 @@ export const getSorularForAdmin = (page: number, size: number) => api.get<Page<S
 export const createSoruForAdmin = (soruData: any) => api.post('/admin/sorular', soruData);
 export const deleteSoruForAdmin = (id: string) => api.delete(`/admin/sorular/${id}`);
 export const getMailLogsForAdmin = (page: number, size: number) => api.get<Page<MailLog>>('/admin/maillogs', { params: { page, size } });
-
-// Teklif yönetimi
-export const createOfferForAdmin = (requestId: string, offerData: { price: number; details: string }) => 
-    api.post(`/admin/requests/${requestId}/offers`, offerData);
-export const updateOfferForAdmin = (offerId: string, price: number) => 
-    api.put(`/admin/offers/${offerId}`, { price });
-
-// Mesajlaşma API'leri
+export const createOfferForAdmin = (requestId: string, offerData: { price: number; details: string }) => api.post(`/admin/requests/${requestId}/offers`, offerData);
+export const updateOfferForAdmin = (offerId: string, price: number) => api.put(`/admin/offers/${offerId}`, { price });
 export const getRepliesForRequest = (requestId: string) => api.get<Reply[]>(`/requests/${requestId}/replies`);
 export const postUserReply = (requestId: string, text: string) => api.post<Reply>(`/me/requests/${requestId}/replies`, { text });
 export const postAdminReply = (requestId: string, text: string) => api.post<Reply>(`/admin/requests/${requestId}/replies`, { text });
+export const verifyEmail = (token: string) => api.get(`/auth/verify-email?token=${token}`);

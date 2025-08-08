@@ -103,6 +103,27 @@ export const RequestDetailModal = ({ request, open, onClose }: Props) => {
                     <ListItem><ListItemText primary="Müşteri Adı Soyadı" secondary={request.user.fullName} /></ListItem>
                     <ListItem><ListItemText primary="E-posta" secondary={request.user.email} /></ListItem>
                     <ListItem><ListItemText primary="Telefon" secondary={request.user.phone} /></ListItem>
+                    {/* YENİ EKLENEN SATIR */}
+                    <ListItem>
+                        <ListItemText 
+                            primary="İşin Yapılacağı Adres" 
+                            secondary={request.address}
+                            sx={{ whiteSpace: 'pre-wrap' }}
+                        />
+                    </ListItem>
+                </List>
+                <Divider sx={{ my: 2 }} />
+
+                <Typography variant="h6">Kullanıcının Verdiği Cevaplar</Typography>
+                <List dense>
+                    {Object.entries(request.details).map(([question, answer]) => (
+                        <ListItem key={question}>
+                            <ListItemText 
+                                primary={question} 
+                                secondary={answer || "-"}
+                            />
+                        </ListItem>
+                    ))}
                 </List>
                 <Divider sx={{ my: 2 }} />
 
