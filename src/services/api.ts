@@ -40,14 +40,14 @@ api.interceptors.response.use(
 );
 
 export interface Page<T> { content: T[]; totalPages: number; totalElements: number; number: number; size: number; }
-export interface UserProfile { 
-    id: string; 
-    fullName: string; 
-    username: string; 
-    email: string; 
-    phone: string; 
-    address: string;
-    emailVerified: boolean; // Yeni alan
+export interface UserProfile {
+  id: string;
+  fullName: string;
+  username: string;
+  email: string;
+  phone: string;
+  address: string;
+  emailVerified: boolean; // Yeni alan
 }
 export interface Usta { id: string; name: string; }
 export interface Soru { id: string; usta: Usta; question: string; type: string; options: string[]; order: number; }
