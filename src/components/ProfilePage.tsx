@@ -6,6 +6,7 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import ErrorIcon from '@mui/icons-material/Error';
 import { Header } from './layout/Header';
 import { updateUserProfile, changePassword, resendVerificationEmail } from '../services/api';
+import type { UserProfile } from '../services/api';
 import { useNavigate } from 'react-router-dom';
 
 const ProfilePage: React.FC = () => {
@@ -44,7 +45,9 @@ const ProfilePage: React.FC = () => {
         try {
             await updateUserProfile(formData);
             setSuccess('Profil bilgileriniz başarıyla güncellendi!');
-            await auth.refreshUserProfile(); // Profili yenile
+            if (auth.refreshUserProfile) {
+                await auth.refreshUserProfile();
+            }
         } catch (err) {
             setError('Profil güncellenirken bir hata oluştu.');
         } finally {

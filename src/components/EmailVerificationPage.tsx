@@ -3,12 +3,12 @@ import { useSearchParams, Link, useNavigate } from 'react-router-dom';
 import { Container, Typography, Paper, Box, CircularProgress, Alert, Button } from '@mui/material';
 import { Header } from './layout/Header';
 import { verifyEmail } from '../services/api';
-import { useAuth } from '../context/AuthContext'; // useAuth import edildi
+import { useAuth } from '../context/AuthContext';
 
 const EmailVerificationPage: React.FC = () => {
     const [searchParams] = useSearchParams();
     const navigate = useNavigate();
-    const auth = useAuth(); // Auth context'i kullan
+    const auth = useAuth();
     const token = searchParams.get('token');
     const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
     const [message, setMessage] = useState('E-posta adresiniz doğrulanıyor, lütfen bekleyin...');
@@ -27,7 +27,9 @@ const EmailVerificationPage: React.FC = () => {
                 setMessage('E-posta adresiniz başarıyla doğrulandı! Profilinize yönlendiriliyorsunuz...');
                 
                 // Profil bilgisini yenile
-                await auth.refreshUserProfile();
+                if (auth.refreshUserProfile) {
+                    await auth.refreshUserProfile();
+                }
 
                 setTimeout(() => {
                     navigate('/profilim'); // Profil sayfasına yönlendir
