@@ -3,10 +3,12 @@ import { useSearchParams, Link, useNavigate } from 'react-router-dom';
 import { Container, Typography, Paper, Box, CircularProgress, Alert, Button } from '@mui/material';
 import { Header } from './layout/Header';
 import { verifyEmail } from '../services/api';
+import { useAuth } from '../context/AuthContext'; // useAuth import edildi
 
 const EmailVerificationPage: React.FC = () => {
     const [searchParams] = useSearchParams();
-    const navigate = useNavigate(); // Yönlendirme için useNavigate hook'u
+    const navigate = useNavigate();
+    const auth = useAuth(); // Auth context'i kullan
     const token = searchParams.get('token');
     const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
     const [message, setMessage] = useState('E-posta adresiniz doğrulanıyor, lütfen bekleyin...');
@@ -22,11 +24,13 @@ const EmailVerificationPage: React.FC = () => {
             try {
                 await verifyEmail(token);
                 setStatus('success');
-                setMessage('E-posta adresiniz başarıyla doğrulandı! Ana sayfaya yönlendiriliyorsunuz...');
+                setMessage('E-posta adresiniz başarıyla doğrulandı! Profilinize yönlendiriliyorsunuz...');
                 
-                // Başarılı mesajını 3 saniye gösterdikten sonra ana sayfaya yönlendir
+                // Profil bilgisini yenile
+                await auth.refreshUserProfile();
+
                 setTimeout(() => {
-                    navigate('/');
+                    navigate('/profilim'); // Profil sayfasına yönlendir
                 }, 3000);
 
             } catch (err: any) {
@@ -36,7 +40,7 @@ const EmailVerificationPage: React.FC = () => {
         };
 
         doVerification();
-    }, [token]); // DİKKAT: Bağımlılık dizisine "token" eklendi. Bu, useEffect'in sadece bir kez çalışmasını sağlar.
+    }, [token, navigate, auth]);
 
     return (
         <div>
@@ -50,7 +54,6 @@ const EmailVerificationPage: React.FC = () => {
                     {status === 'success' && <Alert severity="success">{message}</Alert>}
                     {status === 'error' && <Alert severity="error">{message}</Alert>}
                     
-                    {/* Yönlendirme otomatik olacağı için bu butona gerek kalmayabilir ama yine de kalması iyi olur */}
                     <Button component={Link} to="/" variant="contained" sx={{ mt: 3 }}>
                         Ana Sayfaya Dön
                     </Button>

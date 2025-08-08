@@ -12,6 +12,7 @@ interface AuthContextType {
     login: (credentials: any) => Promise<void>;
     register: (details: any) => Promise<void>;
     logout: () => void;
+    refreshUserProfile: () => Promise<void>; // Yeni fonksiyon
 }
 
 interface UserInfo {
@@ -38,22 +39,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     };
 
     useEffect(() => {
-        console.log("AuthContext: Uygulama yuklendi, token kontrol ediliyor.");
         const storedToken = localStorage.getItem('jwt_token');
         if (storedToken) {
-            console.log("AuthContext: Token bulundu, kullanici bilgileri isleniyor.");
             try {
                 const decodedUser = jwtDecode<UserInfo>(storedToken);
                 setUser(decodedUser);
                 setToken(storedToken);
                 fetchUserProfile();
             } catch (error) {
-                console.error("AuthContext: Gecersiz token, temizleniyor.");
                 localStorage.removeItem('jwt_token');
                 setUser(null); setToken(null); setUserProfile(null);
             }
-        } else {
-            console.log("AuthContext: Token bulunamadi.");
         }
     }, []);
 
@@ -65,15 +61,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             const response = await apiAuthFunction(credentials);
             const newToken = response.data.token;
             
-            console.log("handleAuth: Yeni token alindi, localStorage'a kaydediliyor.");
             localStorage.setItem('jwt_token', newToken);
-            
             const decodedUser = jwtDecode<UserInfo>(newToken);
             setToken(newToken);
             setUser(decodedUser);
             await fetchUserProfile();
         } catch (error) {
-            console.error("handleAuth: Giris/kayit basarisiz.", error);
+            console.error("Authentication failed:", error);
             throw error;
         }
     };
@@ -82,14 +76,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const register = (details: any) => handleAuth(registerUser, details);
 
     const logout = () => {
-        console.log("logout: Cikis yapiliyor, token temizleniyor.");
         localStorage.removeItem('jwt_token');
         setToken(null);
         setUser(null);
         setUserProfile(null);
     };
 
-    const value = { token, user, isAdmin, userProfile, login, register, logout };
+    const value = { token, user, isAdmin, userProfile, login, register, logout, refreshUserProfile: fetchUserProfile };
 
     return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

@@ -6,7 +6,6 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import ErrorIcon from '@mui/icons-material/Error';
 import { Header } from './layout/Header';
 import { updateUserProfile, changePassword, resendVerificationEmail } from '../services/api';
-import type { UserProfile } from '../services/api';
 import { useNavigate } from 'react-router-dom';
 
 const ProfilePage: React.FC = () => {
@@ -30,7 +29,7 @@ const ProfilePage: React.FC = () => {
                 address: auth.userProfile.address || ''
             });
             setLoading(false);
-        } else if (!auth.token && !auth.userProfile) {
+        } else if (!auth.token && auth.userProfile === null) {
             navigate('/');
         }
     }, [auth.userProfile, auth.token, navigate]);
@@ -45,6 +44,7 @@ const ProfilePage: React.FC = () => {
         try {
             await updateUserProfile(formData);
             setSuccess('Profil bilgileriniz başarıyla güncellendi!');
+            await auth.refreshUserProfile(); // Profili yenile
         } catch (err) {
             setError('Profil güncellenirken bir hata oluştu.');
         } finally {
@@ -92,7 +92,13 @@ const ProfilePage: React.FC = () => {
                         Profilim
                     </Typography>
                     <Box component="form" onSubmit={handleSubmit}>
-                        <TextField label="Kullanıcı Adı" value={auth.userProfile?.username || ''} fullWidth margin="normal" disabled />
+                        <TextField
+                            label="Kullanıcı Adı"
+                            value={auth.userProfile?.username || ''}
+                            fullWidth
+                            margin="normal"
+                            disabled
+                        />
                         <TextField
                             label="E-posta"
                             value={auth.userProfile?.email || ''}
@@ -112,13 +118,46 @@ const ProfilePage: React.FC = () => {
                         />
                         {!auth.userProfile?.emailVerified && (
                             <Button onClick={handleResendVerification} fullWidth>
-                                Doğrulama Linkini Tekrar Gönder
+                                Doğrulama Linki Gönder
                             </Button>
                         )}
-                        <TextField label="Ad Soyad" name="fullName" value={formData.fullName} onChange={handleChange} fullWidth margin="normal" required />
-                        <TextField label="Telefon" name="phone" value={formData.phone} onChange={handleChange} fullWidth margin="normal" required />
-                        <TextField label="Adres" name="address" value={formData.address} onChange={handleChange} fullWidth margin="normal" multiline rows={3} required />
-                        <Button type="submit" variant="contained" color="primary" fullWidth disabled={submitting} sx={{ mt: 2 }}>
+                        <TextField
+                            label="Ad Soyad"
+                            name="fullName"
+                            value={formData.fullName}
+                            onChange={handleChange}
+                            fullWidth
+                            margin="normal"
+                            required
+                        />
+                        <TextField
+                            label="Telefon"
+                            name="phone"
+                            value={formData.phone}
+                            onChange={handleChange}
+                            fullWidth
+                            margin="normal"
+                            required
+                        />
+                        <TextField
+                            label="Adres"
+                            name="address"
+                            value={formData.address}
+                            onChange={handleChange}
+                            fullWidth
+                            margin="normal"
+                            multiline
+                            rows={3}
+                            required
+                        />
+                        <Button
+                            type="submit"
+                            variant="contained"
+                            color="primary"
+                            fullWidth
+                            disabled={submitting}
+                            sx={{ mt: 2 }}
+                        >
                             {submitting ? <CircularProgress size={24} /> : 'Bilgileri Güncelle'}
                         </Button>
                     </Box>
