@@ -61,25 +61,23 @@ export const Header = () => {
   };
   
   const handleForgotPassword = async () => {
-        setError(''); setSuccess('');
-        try {
-            const response = await forgotPassword(email);
-            setSuccess(response.data);
-            // Başarılı mesajını 3 saniye göster ve modalı kapat
-            setTimeout(() => {
-                handleClose();
-            }, 3000);
-        } catch (err) {
-            setError("Bir hata oluştu, lütfen tekrar deneyin.");
-        }
-    };
+    setError(''); setSuccess('');
+    try {
+        const response = await forgotPassword(email);
+        setSuccess(response.data);
+        setTimeout(() => {
+            handleClose();
+        }, 3000);
+    } catch (err) {
+        setError("Bir hata oluştu, lütfen tekrar deneyin.");
+    }
+  };
 
   const handleLogout = () => { handleMenuClose(); auth.logout(); navigate('/'); };
 
-  // DİKKAT: Fonksiyon gövdesinin parantez () ile başladığından emin olun.
-  // Bu, JSX'in otomatik olarak return edilmesini sağlar.
   const renderDesktopMenu = () => (
     <>
+      <Button color="inherit" component={Link} to="/">Usta Bul</Button>
       <Button color="inherit" component={Link} to="/hakkimizda">Hakkımızda</Button>
       <Button color="inherit" component={Link} to="/iletisim">İletişim</Button>
       {auth.user ? (
@@ -120,6 +118,7 @@ export const Header = () => {
                 <Divider />
               </>
             )}
+            <ListItem disablePadding component={Link} to="/" sx={{ color: 'inherit' }}><ListItemButton><ListItemText primary="Usta Bul" /></ListItemButton></ListItem>
             <ListItem disablePadding component={Link} to="/hakkimizda" sx={{ color: 'inherit' }}><ListItemButton><ListItemText primary="Hakkımızda" /></ListItemButton></ListItem>
             <ListItem disablePadding component={Link} to="/iletisim" sx={{ color: 'inherit' }}><ListItemButton><ListItemText primary="İletişim" /></ListItemButton></ListItem>
             <Divider />
@@ -144,10 +143,23 @@ export const Header = () => {
 
   return (
     <>
-      <AppBar position="static" sx={{ background: 'linear-gradient(45deg, #2196F3 30%, #21CBF3 90%)', boxShadow: '0 3px 5px 2px rgba(33, 203, 243, .3)' }}>
+      <AppBar 
+        position="static" 
+        sx={{ 
+          background: 'rgba(25, 25, 25, 0.7)',
+          backdropFilter: 'blur(10px)',
+          boxShadow: '0 4px 30px rgba(0, 0, 0, 0.1)',
+          borderBottom: '1px solid rgba(255, 255, 255, 0.2)'
+        }}
+      >
         <Toolbar>
           <Box component={Link} to="/" sx={{ flexGrow: 1, display: 'flex', alignItems: 'center', textDecoration: 'none', color: 'inherit' }}>
-            <Box component="img" src={logo} alt="Usta Tedarik Merkezi Logo" sx={{ height: 40, mr: 1.5 }} />
+            <Box
+              component="img"
+              src={logo}
+              alt="Usta Tedarik Merkezi Logo"
+              sx={{ height: 40, mr: 1.5 }}
+            />
             <Typography variant="h6" component="div" sx={{ fontFamily: 'Poppins', fontWeight: 'bold' }}>
               Usta Tedarik Merkezi
             </Typography>
