@@ -5,6 +5,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import logo from '../../assets/banner.png';
 import MenuIcon from '@mui/icons-material/Menu';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
+import PhoneIcon from '@mui/icons-material/Phone'; // Telefon ikonu için yeni import
 import { forgotPassword } from '../../services/api';
 
 const modalStyle = {
@@ -80,6 +81,27 @@ export const Header = () => {
       <Button color="inherit" component={Link} to="/">Usta Bul</Button>
       <Button color="inherit" component={Link} to="/hakkimizda">Hakkımızda</Button>
       <Button color="inherit" component={Link} to="/iletisim">İletişim</Button>
+
+      {/* DİKKAT: Telefon Numarası İçin Yeni Eklenen Kısım */}
+      <Box sx={{ flexGrow: 1, display: 'flex', justifyContent: 'center' }}>
+          <Button 
+            href="tel:+905055440166" 
+            startIcon={<PhoneIcon />}
+            sx={{ 
+              color: 'white', 
+              border: '1px solid rgba(255, 255, 255, 0.5)',
+              borderRadius: '20px',
+              px: 2,
+              '&:hover': {
+                backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                borderColor: 'white'
+              }
+            }}
+          >
+            +90 505 544 01 66
+          </Button>
+      </Box>
+
       {auth.user ? (
         <div>
           <Button onClick={handleMenu} color="inherit" startIcon={<AccountCircleIcon />}>
