@@ -49,6 +49,15 @@ export interface UserProfile {
   address: string;
   emailVerified: boolean; // Yeni alan
 }
+
+export const getHizmetById = (id: string) => api.get<Hizmet>(`/admin/hizmetler/${id}`);
+
+export interface Hizmet {
+    id?: string;
+    title: string;
+    description: string;
+    videoUrl: string;
+}
 export interface Usta { id: string; name: string; }
 export interface Soru { id: string; usta: Usta; question: string; type: string; options: string[]; order: number; }
 export interface Offer { id: string; price: number; details: string; createdDate: string; }
@@ -74,6 +83,11 @@ export const forgotPassword = (email: string) => api.post('/auth/forgot-password
 export const resetPassword = (token: string, password: string) => api.post('/auth/reset-password', { token, password });
 export const getUstalar = () => api.get<Usta[]>('/ustalar');
 export const getSorularByUsta = (ustaName: string) => api.get<Soru[]>(`/sorular/usta/${ustaName}`);
+export const getAllHizmetler = () => api.get<Hizmet[]>('/hizmetler');
+export const getAdminHizmetler = () => api.get<Hizmet[]>('/admin/hizmetler');
+export const createHizmet = (hizmet: Hizmet) => api.post<Hizmet>('/admin/hizmetler', hizmet);
+export const updateHizmet = (id: string, hizmet: Hizmet) => api.put<Hizmet>(`/admin/hizmetler/${id}`, hizmet);
+export const deleteHizmet = (id: string) => api.delete(`/admin/hizmetler/${id}`);
 
 // Kullanıcıya Özel
 export const getMyProfile = () => api.get<UserProfile>('/me');

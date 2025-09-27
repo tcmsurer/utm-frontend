@@ -5,7 +5,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import logo from '../../assets/banner.png';
 import MenuIcon from '@mui/icons-material/Menu';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
-import PhoneIcon from '@mui/icons-material/Phone'; // Telefon ikonu için yeni import
+import PhoneIcon from '@mui/icons-material/Phone';
 import { forgotPassword } from '../../services/api';
 
 const modalStyle = {
@@ -79,22 +79,22 @@ export const Header = () => {
   const renderDesktopMenu = () => (
     <>
       <Button color="inherit" component={Link} to="/">Usta Bul</Button>
+      <Button color="inherit" component={Link} to="/hizmetlerimiz">Hizmetlerimiz</Button>
       <Button color="inherit" component={Link} to="/hakkimizda">Hakkımızda</Button>
       <Button color="inherit" component={Link} to="/iletisim">İletişim</Button>
 
-      {/* DİKKAT: Telefon Numarası İçin Yeni Eklenen Kısım */}
       <Box sx={{ flexGrow: 1, display: 'flex', justifyContent: 'center' }}>
           <Button 
             href="tel:+905055440166" 
             startIcon={<PhoneIcon />}
+            variant="contained"
             sx={{ 
-              color: 'white', 
-              border: '1px solid rgba(255, 255, 255, 0.5)',
+              color: '#0D47A1',
+              backgroundColor: '#FFC107',
               borderRadius: '20px',
               px: 2,
               '&:hover': {
-                backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                borderColor: 'white'
+                backgroundColor: '#FFD54F',
               }
             }}
           >
@@ -141,6 +141,7 @@ export const Header = () => {
               </>
             )}
             <ListItem disablePadding component={Link} to="/" sx={{ color: 'inherit' }}><ListItemButton><ListItemText primary="Usta Bul" /></ListItemButton></ListItem>
+            <ListItem disablePadding component={Link} to="/hizmetlerimiz" sx={{ color: 'inherit' }}><ListItemButton><ListItemText primary="Hizmetlerimiz" /></ListItemButton></ListItem>
             <ListItem disablePadding component={Link} to="/hakkimizda" sx={{ color: 'inherit' }}><ListItemButton><ListItemText primary="Hakkımızda" /></ListItemButton></ListItem>
             <ListItem disablePadding component={Link} to="/iletisim" sx={{ color: 'inherit' }}><ListItemButton><ListItemText primary="İletişim" /></ListItemButton></ListItem>
             <Divider />
@@ -167,15 +168,14 @@ export const Header = () => {
     <>
       <AppBar 
         position="static" 
+        elevation={1}
         sx={{ 
-          background: 'rgba(25, 25, 25, 0.7)',
-          backdropFilter: 'blur(10px)',
-          boxShadow: '0 4px 30px rgba(0, 0, 0, 0.1)',
-          borderBottom: '1px solid rgba(255, 255, 255, 0.2)'
+          background: 'linear-gradient(45deg, #0D47A1 30%, #1976D2 90%)',
+          color: 'white'
         }}
       >
         <Toolbar>
-          <Box component={Link} to="/" sx={{ flexGrow: 1, display: 'flex', alignItems: 'center', textDecoration: 'none', color: 'inherit' }}>
+          <Box component={Link} to="/" sx={{ display: 'flex', alignItems: 'center', textDecoration: 'none', color: 'inherit' }}>
             <Box
               component="img"
               src={logo}
@@ -186,6 +186,7 @@ export const Header = () => {
               Usta Tedarik Merkezi
             </Typography>
           </Box>
+          <Box sx={{ flexGrow: 1 }} />
           {isMobile ? renderMobileMenu() : renderDesktopMenu()}
         </Toolbar>
       </AppBar>
@@ -214,7 +215,7 @@ export const Header = () => {
                   {isRegister ? 'Kayıt Ol' : 'Giriş Yap'}
               </Typography>
               <Box component="form" onSubmit={handleSubmit} sx={{ mt: 1 }}>
-                  <TextField margin="normal" required fullWidth label="Kullanıcı Adı" value={username} onChange={e => setUsername(e.target.value)} inputProps={{ autoCapitalize: 'none' }} />
+                  <TextField margin="normal" required fullWidth label="Kullanıcı Adı veya E-posta" value={username} onChange={e => setUsername(e.target.value)} inputProps={{ autoCapitalize: 'none' }} />
                   <TextField margin="normal" required fullWidth label="Şifre" type="password" value={password} onChange={e => setPassword(e.target.value)} />
                   {isRegister && (
                       <>
