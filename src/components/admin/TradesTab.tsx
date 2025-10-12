@@ -1,112 +1,152 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Typography, TextField, Button, Pagination, CircularProgress, Paper, Table, TableContainer, TableHead, TableBody, TableRow, TableCell, IconButton } from '@mui/material';
-import DeleteIcon from '@mui/icons-material/Delete';
-import { getUstalarForAdmin, createUstaForAdmin, deleteUstaForAdmin } from '../../services/api';
-import type { Usta, Page } from '../../services/api';
+import { Box, Typography, Button, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Switch, Alert, TablePagination, IconButton, Modal, TextField, CircularProgress } from '@mui/material';
+import { useNavigate } from 'react-router-dom';
+import { getUstalarForAdmin, createUsta, activateUsta, deactivateUsta, Usta } from '../../services/api';
+import PhotoLibraryIcon from '@mui/icons-material/PhotoLibrary';
+import AddIcon from '@mui/icons-material/Add';
+import EditIcon from '@mui/icons-material/Edit';
 
-interface TabProps {
+const modalStyle = {
+    position: 'absolute' as 'absolute',
+    top: '50%',
+    left: '50%',
+    transform: 'translate(-50%, -50%)',
+    width: { xs: '90%', sm: 500 },
+    bgcolor: 'background.paper',
+    boxShadow: 24,
+    p: 4,
+};
+
+interface UstaWithStatus extends Usta {
     active: boolean;
+    profileImageUrl?: string;
 }
 
-export const TradesTab = ({ active }: TabProps) => {
-    const [ustaPage, setUstaPage] = useState<Page<Usta> | null>(null);
-    const [currentPage, setCurrentPage] = useState(1);
-    const [loading, setLoading] = useState(false);
+export const TradesTab: React.FC<{ active: boolean }> = ({ active }) => {
+    const [ustalar, setUstalar] = useState<UstaWithStatus[]>([]);
+    const [page, setPage] = useState(0);
+    const [rowsPerPage, setRowsPerPage] = useState(10);
+    const [totalElements, setTotalElements] = useState(0);
     const [error, setError] = useState<string | null>(null);
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [formLoading, setFormLoading] = useState(false);
+
+    // Form state'leri
     const [newUstaName, setNewUstaName] = useState('');
+    const [profileImageFile, setProfileImageFile] = useState<File | null>(null);
+    
+    const navigate = useNavigate();
 
-    useEffect(() => {
-        if (active) {
-            fetchUstalar(currentPage - 1);
+    const fetchUstalar = async () => {
+        try {
+            const response = await getUstalarForAdmin(page, rowsPerPage);
+            setUstalar(response.data.content as UstaWithStatus[]);
+            setTotalElements(response.data.totalElements);
+        } catch (err) { setError("Ustalar yüklenemedi."); }
+    };
+
+    useEffect(() => { if (active) { fetchUstalar(); } }, [active, page, rowsPerPage]);
+
+    const handleToggleActive = async (id: string, currentStatus: boolean) => {
+        try {
+            if (currentStatus) { await deactivateUsta(id); } else { await activateUsta(id); }
+            fetchUstalar();
+        } catch (err) { setError("Usta durumu güncellenemedi."); }
+    };
+
+    const handleOpenModal = () => {
+        setNewUstaName('');
+        setProfileImageFile(null);
+        setError(null);
+        setIsModalOpen(true);
+    };
+
+    const handleCloseModal = () => setIsModalOpen(false);
+
+    const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        if (event.target.files && event.target.files[0]) {
+            setProfileImageFile(event.target.files[0]);
         }
-    }, [currentPage, active]);
+    };
 
-    const fetchUstalar = async (page: number) => {
-        setLoading(true);
+    const handleSaveUsta = async (event: React.FormEvent) => {
+        event.preventDefault();
+        if (!newUstaName.trim()) { setError("Usta adı boş olamaz."); return; }
+
+        const formData = new FormData();
+        formData.append('name', newUstaName);
+        if (profileImageFile) {
+            formData.append('profileImage', profileImageFile);
+        }
+
+        setFormLoading(true);
         setError(null);
         try {
-            const response = await getUstalarForAdmin(page, 10);
-            setUstaPage(response.data);
-        } catch (err) {
-            console.error("Ustalar getirilirken hata oluştu:", err);
-            setError("Usta listesi yüklenirken bir hata oluştu.");
-        } finally {
-            setLoading(false);
-        }
+            await createUsta(formData);
+            handleCloseModal();
+            fetchUstalar();
+        } catch (err) { setError("Yeni usta oluşturulamadı."); } finally { setFormLoading(false); }
     };
-
-    const handleAddUsta = async (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!newUstaName.trim()) return;
-        try {
-            await createUstaForAdmin({ name: newUstaName });
-            setNewUstaName('');
-            if (currentPage === 1) {
-                fetchUstalar(0);
-            } else {
-                setCurrentPage(1);
-            }
-        } catch (error) {
-            console.error("Usta eklenirken hata oluştu:", error);
-            alert('Usta eklenemedi. Yetkiniz var mı?');
-        }
-    };
-
-    const handleDeleteUsta = async (id: string) => {
-        if (window.confirm('Bu usta tanımını silmek istediğinizden emin misiniz?')) {
-            try {
-                await deleteUstaForAdmin(id);
-                fetchUstalar(currentPage - 1);
-            } catch (error) {
-                console.error("Usta silinirken hata oluştu:", error);
-                alert('Usta silinemedi.');
-            }
-        }
-    };
-
-    const handlePageChange = (event: React.ChangeEvent<unknown>, value: number) => {
-        setCurrentPage(value);
-    };
-
-    if (loading) { return <CircularProgress />; }
-    if (error) { return <Typography color="error">{error}</Typography>; }
 
     return (
         <Box>
-            <Typography variant="h5" gutterBottom>Usta Tanımlarını Yönet</Typography>
-            <Box component="form" onSubmit={handleAddUsta} sx={{ display: 'flex', gap: 2, mb: 3 }}>
-                <TextField label="Yeni Usta Adı" variant="outlined" value={newUstaName} onChange={(e) => setNewUstaName(e.target.value)} size="small" sx={{ flexGrow: 1 }} />
-                <Button type="submit" variant="contained">Ekle</Button>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                <Typography variant="h6">Usta Tanımları</Typography>
+                <Button variant="contained" startIcon={<AddIcon />} onClick={handleOpenModal}>
+                    Yeni Usta Ekle
+                </Button>
             </Box>
+            
+            {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+
             <TableContainer component={Paper}>
                 <Table>
                     <TableHead>
                         <TableRow>
                             <TableCell>Usta Adı</TableCell>
-                            <TableCell align="right">Eylemler</TableCell>
+                            <TableCell align="center">Aktif Durumu</TableCell>
+                            <TableCell align="right">İşlemler</TableCell>
                         </TableRow>
                     </TableHead>
                     <TableBody>
-                        {ustaPage && ustaPage.content.length > 0 ? (
-                            ustaPage.content.map((usta) => (
-                                <TableRow key={usta.id}>
-                                    <TableCell>{usta.name}</TableCell>
-                                    <TableCell align="right">
-                                        <IconButton edge="end" aria-label="delete" onClick={() => handleDeleteUsta(usta.id)}><DeleteIcon /></IconButton>
-                                    </TableCell>
-                                </TableRow>
-                            ))
-                        ) : (
-                            <TableRow>
-                                <TableCell colSpan={2} align="center">Usta tanımı bulunamadı.</TableCell>
+                        {ustalar.map((usta) => (
+                            <TableRow key={usta.id} sx={{ '&:last-child td, &:last-child th': { border: 0 }, opacity: usta.active ? 1 : 0.5 }}>
+                                <TableCell>{usta.name}</TableCell>
+                                <TableCell align="center">
+                                    <Switch checked={usta.active} onChange={() => handleToggleActive(usta.id, usta.active)} color="success" />
+                                </TableCell>
+                                <TableCell align="right">
+                                    <IconButton size="small" sx={{ mr: 1 }} disabled> {/* Düzenleme ileride eklenebilir */}
+                                        <EditIcon />
+                                    </IconButton>
+                                    <Button variant="outlined" size="small" startIcon={<PhotoLibraryIcon />} onClick={() => navigate(`/admin/usta-portfolio/${usta.id}`)}>
+                                        Portfolyo
+                                    </Button>
+                                </TableCell>
                             </TableRow>
-                        )}
+                        ))}
                     </TableBody>
                 </Table>
             </TableContainer>
-            <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2, p: 2 }}>
-                <Pagination count={ustaPage?.totalPages || 0} page={currentPage} onChange={handlePageChange} color="primary" disabled={!ustaPage || ustaPage.totalPages === 0} />
-            </Box>
+            <TablePagination component="div" count={totalElements} page={page} onPageChange={(e, newPage) => setPage(newPage)} rowsPerPage={rowsPerPage} onRowsPerPageChange={(e) => { setRowsPerPage(parseInt(e.target.value, 10)); setPage(0); }} />
+
+            <Modal open={isModalOpen} onClose={handleCloseModal}>
+                <Box sx={modalStyle}>
+                    <Typography variant="h6" component="h2">Yeni Usta Ekle</Typography>
+                    <Box component="form" onSubmit={handleSaveUsta} sx={{ mt: 2 }}>
+                        <TextField fullWidth required label="Usta Adı" value={newUstaName} onChange={e => setNewUstaName(e.target.value)} margin="normal" />
+                        <Button variant="contained" component="label" fullWidth sx={{ mt: 1 }}>
+                            Profil Resmi Seç (Opsiyonel)
+                            <input type="file" hidden accept="image/*" onChange={handleFileChange} />
+                        </Button>
+                        {profileImageFile && <Typography variant="body2" sx={{ mt: 1 }}>Seçilen: {profileImageFile.name}</Typography>}
+                        <Box sx={{ mt: 3, display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
+                            <Button onClick={handleCloseModal}>İptal</Button>
+                            <Button type="submit" variant="contained" disabled={formLoading}>{formLoading ? <CircularProgress size={24} /> : 'Kaydet'}</Button>
+                        </Box>
+                    </Box>
+                </Box>
+            </Modal>
         </Box>
     );
 };

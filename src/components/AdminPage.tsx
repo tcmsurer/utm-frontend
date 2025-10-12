@@ -7,7 +7,7 @@ import { TradesTab } from './admin/TradesTab';
 import { QuestionsTab } from './admin/QuestionsTab';
 import { MailLogTab } from './admin/MailLogTab';
 import { UsersTab } from './admin/UsersTab';
-import HizmetList from './admin/HizmetList'; // 1. Yeni bileşeni import ediyoruz
+import HizmetList from './admin/HizmetList';
 
 function TabPanel(props: { children?: React.ReactNode; index: number; value: number; }) {
     const { children, value, index, ...other } = props;
@@ -57,7 +57,8 @@ const AdminPage: React.FC = () => {
                             <Tab label="Usta Tanımları" />
                             <Tab label="Soru Tanımları" />
                             <Tab label="Mail Kayıtları" />
-                            <Tab label="Hizmetler" /> {/* 2. Yeni sekmeyi ekliyoruz */}
+                            <Tab label="Hizmetler" />
+                            {/* DİKKAT: Usta Rehberi sekmesi buradan kaldırıldı */}
                         </Tabs>
                     </Box>
                     <TabPanel value={tabIndex} index={0}><RequestsTab active={tabIndex === 0} /></TabPanel>
@@ -65,8 +66,8 @@ const AdminPage: React.FC = () => {
                     <TabPanel value={tabIndex} index={2}><TradesTab active={tabIndex === 2} /></TabPanel>
                     <TabPanel value={tabIndex} index={3}><QuestionsTab active={tabIndex === 3} /></TabPanel>
                     <TabPanel value={tabIndex} index={4}><MailLogTab active={tabIndex === 4} /></TabPanel>
-                    {/* 3. Yeni sekmenin içeriğini ekliyoruz */}
-                    <TabPanel value={tabIndex} index={5}><HizmetList /></TabPanel> 
+                    <TabPanel value={tabIndex} index={5}><HizmetList /></TabPanel>
+                    {/* DİKKAT: Usta Rehberi TabPanel'i buradan kaldırıldı */}
                 </Paper>
             </Container>
         </div>

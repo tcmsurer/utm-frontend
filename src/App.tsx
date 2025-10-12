@@ -8,15 +8,16 @@ import AboutPage from './components/AboutPage';
 import ContactPage from './components/ContactPage';
 import ProfilePage from './components/ProfilePage';
 import EmailVerificationPage from './components/EmailVerificationPage';
-import PasswordResetPage from './components/ResetPasswordPage'; // Yeni eklendi
-import HizmetlerimizPage from './components/HizmetlerimizPage'; // Yeni eklendi
+import PasswordResetPage from './components/ResetPasswordPage';
+import HizmetlerimizPage from './components/HizmetlerimizPage';
+import UstaRehberiListPage from './components/UstaRehberiListPage'; 
+import UstaPortfolioDetailPage from './components/UstaPortfolioDetailPage'; // Yeni portfolyo detay sayfası
+import UstaPortfolioYonetimi from './components/admin/UstaPortfolioYonetimi';
 import './App.css';
 
 // Admin rotalarını korumak için özel bir bileşen
 const AdminRoute = ({ children }: { children: JSX.Element }) => {
   const auth = useAuth();
-  // Not: AuthContext'in yüklenmesini beklemek için küçük bir kontrol eklenebilir
-  // ancak şimdilik bu yapı çalışacaktır.
   return auth.isAdmin ? children : <Navigate to="/" />;
 };
 
@@ -31,20 +32,26 @@ function App() {
     <AuthProvider>
       <Router>
         <Routes>
-          {/* Herkesin erişebileceği sayfalar */}
+          {/* Herkesin Erişebileceği Sayfalar */}
           <Route path="/" element={<Home />} />
           <Route path="/hakkimizda" element={<AboutPage />} />
           <Route path="/iletisim" element={<ContactPage />} />
           <Route path="/hizmetlerimiz" element={<HizmetlerimizPage />} />
+          <Route path="/usta-rehberi" element={<UstaRehberiListPage />} />
+          
+          {/* DİKKAT: Eski rota, yeni portfolyo rotası ile değiştirildi */}
+          <Route path="/usta-portfolio/:ustaId" element={<UstaPortfolioDetailPage />} />
+          
           <Route path="/sifre-sifirla" element={<PasswordResetPage />} />
           <Route path="/email-dogrula" element={<EmailVerificationPage />} />
 
-          {/* Sadece giriş yapmış kullanıcıların erişebileceği sayfalar */}
+          {/* Sadece Giriş Yapmış Kullanıcıların Erişebileceği Sayfalar */}
           <Route path="/profilim" element={<UserRoute><ProfilePage /></UserRoute>} />
           <Route path="/taleplerim" element={<UserRoute><MyRequests /></UserRoute>} />
 
-          {/* Sadece adminlerin erişebileceği sayfalar */}
+          {/* Sadece Adminlerin Erişebileceği Sayfalar */}
           <Route path="/admin/*" element={<AdminRoute><AdminPage /></AdminRoute>} />
+          <Route path="/admin/usta-portfolio/:ustaId" element={<AdminRoute><UstaPortfolioYonetimi /></AdminRoute>} />
         </Routes>
       </Router>
     </AuthProvider>

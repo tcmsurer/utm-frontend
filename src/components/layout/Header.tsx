@@ -79,6 +79,7 @@ export const Header = () => {
   const renderDesktopMenu = () => (
     <>
       <Button color="inherit" component={Link} to="/">Usta Bul</Button>
+      <Button color="inherit" component={Link} to="/usta-rehberi">Usta Rehberi</Button>
       <Button color="inherit" component={Link} to="/hizmetlerimiz">Hizmetlerimiz</Button>
       <Button color="inherit" component={Link} to="/hakkimizda">Hakkımızda</Button>
       <Button color="inherit" component={Link} to="/iletisim">İletişim</Button>
@@ -141,6 +142,7 @@ export const Header = () => {
               </>
             )}
             <ListItem disablePadding component={Link} to="/" sx={{ color: 'inherit' }}><ListItemButton><ListItemText primary="Usta Bul" /></ListItemButton></ListItem>
+            <ListItem disablePadding component={Link} to="/usta-rehberi" sx={{ color: 'inherit' }}><ListItemButton><ListItemText primary="Usta Rehberi" /></ListItemButton></ListItem>
             <ListItem disablePadding component={Link} to="/hizmetlerimiz" sx={{ color: 'inherit' }}><ListItemButton><ListItemText primary="Hizmetlerimiz" /></ListItemButton></ListItem>
             <ListItem disablePadding component={Link} to="/hakkimizda" sx={{ color: 'inherit' }}><ListItemButton><ListItemText primary="Hakkımızda" /></ListItemButton></ListItem>
             <ListItem disablePadding component={Link} to="/iletisim" sx={{ color: 'inherit' }}><ListItemButton><ListItemText primary="İletişim" /></ListItemButton></ListItem>
