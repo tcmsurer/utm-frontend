@@ -111,7 +111,15 @@ export const createUsta = (formData: FormData) => {
             'Content-Type': 'multipart/form-data',
         },
     });
-};export const getSorularForAdmin = (page: number, size: number) => api.get<Page<Soru>>('/admin/sorular', { params: { page, size } });
+};
+export const updateUsta = (id: string, formData: FormData) => {
+    return api.put<Usta>(`/admin/ustalar/${id}`, formData, {
+        headers: {
+            'Content-Type': 'multipart/form-data',
+        },
+    });
+};
+export const getSorularForAdmin = (page: number, size: number) => api.get<Page<Soru>>('/admin/sorular', { params: { page, size } });
 export const createSoruForAdmin = (soruData: any) => api.post('/admin/sorular', soruData);
 export const deleteSoruForAdmin = (id: string) => api.delete(`/admin/sorular/${id}`);
 export const getMailLogsForAdmin = (page: number, size: number) => api.get<Page<MailLog>>('/admin/maillogs', { params: { page, size } });

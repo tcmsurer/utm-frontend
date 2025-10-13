@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Typography, Button, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Switch, Alert, TablePagination, IconButton, Modal, TextField, CircularProgress } from '@mui/material';
+import { Box, Typography, Button, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Switch, Alert, TablePagination, IconButton, Modal, TextField, CircularProgress, Avatar } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
-import { getUstalarForAdmin, createUsta, activateUsta, deactivateUsta, Usta } from '../../services/api';
+import { getUstalarForAdmin, createUsta, updateUsta, activateUsta, deactivateUsta, Usta } from '../../services/api';
 import PhotoLibraryIcon from '@mui/icons-material/PhotoLibrary';
 import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
@@ -17,6 +17,8 @@ const modalStyle = {
     p: 4,
 };
 
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8080';
+
 interface UstaWithStatus extends Usta {
     active: boolean;
     profileImageUrl?: string;
@@ -30,32 +32,54 @@ export const TradesTab: React.FC<{ active: boolean }> = ({ active }) => {
     const [error, setError] = useState<string | null>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [formLoading, setFormLoading] = useState(false);
-
-    // Form state'leri
-    const [newUstaName, setNewUstaName] = useState('');
+    
+    const [editingUsta, setEditingUsta] = useState<UstaWithStatus | null>(null);
+    const [ustaName, setUstaName] = useState('');
     const [profileImageFile, setProfileImageFile] = useState<File | null>(null);
     
     const navigate = useNavigate();
 
-    const fetchUstalar = async () => {
-        try {
-            const response = await getUstalarForAdmin(page, rowsPerPage);
-            setUstalar(response.data.content as UstaWithStatus[]);
-            setTotalElements(response.data.totalElements);
-        } catch (err) { setError("Ustalar yüklenemedi."); }
-    };
+    useEffect(() => {
+        // Fonksiyonu useEffect içine taşıyarak ESLint uyarısını gideriyoruz
+        const fetchUstalar = async () => {
+            try {
+                const response = await getUstalarForAdmin(page, rowsPerPage);
+                setUstalar(response.data.content as UstaWithStatus[]);
+                setTotalElements(response.data.totalElements);
+            } catch (err) { 
+                setError("Ustalar yüklenemedi."); 
+            }
+        };
 
-    useEffect(() => { if (active) { fetchUstalar(); } }, [active, page, rowsPerPage]);
+        if (active) { 
+            fetchUstalar(); 
+        } 
+    }, [active, page, rowsPerPage]);
 
     const handleToggleActive = async (id: string, currentStatus: boolean) => {
         try {
-            if (currentStatus) { await deactivateUsta(id); } else { await activateUsta(id); }
-            fetchUstalar();
-        } catch (err) { setError("Usta durumu güncellenemedi."); }
+            if (currentStatus) { 
+                await deactivateUsta(id); 
+            } else { 
+                await activateUsta(id); 
+            }
+            // State'i anında güncellemek yerine listeyi yeniden çekerek en güncel halini alıyoruz.
+            // Bu en güvenli yöntemdir.
+            const response = await getUstalarForAdmin(page, rowsPerPage);
+            setUstalar(response.data.content as UstaWithStatus[]);
+            setTotalElements(response.data.totalElements);
+        } catch (err) { 
+            setError("Usta durumu güncellenemedi."); 
+        }
     };
 
-    const handleOpenModal = () => {
-        setNewUstaName('');
+    const handleOpenModal = (usta: UstaWithStatus | null = null) => {
+        setEditingUsta(usta);
+        if (usta) {
+            setUstaName(usta.name);
+        } else {
+            setUstaName('');
+        }
         setProfileImageFile(null);
         setError(null);
         setIsModalOpen(true);
@@ -71,10 +95,10 @@ export const TradesTab: React.FC<{ active: boolean }> = ({ active }) => {
 
     const handleSaveUsta = async (event: React.FormEvent) => {
         event.preventDefault();
-        if (!newUstaName.trim()) { setError("Usta adı boş olamaz."); return; }
+        if (!ustaName.trim()) { setError("Usta adı boş olamaz."); return; }
 
         const formData = new FormData();
-        formData.append('name', newUstaName);
+        formData.append('name', ustaName);
         if (profileImageFile) {
             formData.append('profileImage', profileImageFile);
         }
@@ -82,17 +106,29 @@ export const TradesTab: React.FC<{ active: boolean }> = ({ active }) => {
         setFormLoading(true);
         setError(null);
         try {
-            await createUsta(formData);
+            if (editingUsta) {
+                await updateUsta(editingUsta.id, formData);
+            } else {
+                await createUsta(formData);
+            }
             handleCloseModal();
-            fetchUstalar();
-        } catch (err) { setError("Yeni usta oluşturulamadı."); } finally { setFormLoading(false); }
+            // Listeyi yeniden çekerek güncel halini al
+            const response = await getUstalarForAdmin(page, rowsPerPage);
+            setUstalar(response.data.content as UstaWithStatus[]);
+            setTotalElements(response.data.totalElements);
+        } catch (err: any) {
+            const errorMessage = err.response?.data?.message || (editingUsta ? "Usta güncellenemedi." : "Yeni usta oluşturulamadı.");
+            setError(errorMessage);
+        } finally {
+            setFormLoading(false);
+        }
     };
 
     return (
         <Box>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
                 <Typography variant="h6">Usta Tanımları</Typography>
-                <Button variant="contained" startIcon={<AddIcon />} onClick={handleOpenModal}>
+                <Button variant="contained" startIcon={<AddIcon />} onClick={() => handleOpenModal()}>
                     Yeni Usta Ekle
                 </Button>
             </Box>
@@ -103,6 +139,7 @@ export const TradesTab: React.FC<{ active: boolean }> = ({ active }) => {
                 <Table>
                     <TableHead>
                         <TableRow>
+                            <TableCell sx={{ width: '50px' }}>Resim</TableCell>
                             <TableCell>Usta Adı</TableCell>
                             <TableCell align="center">Aktif Durumu</TableCell>
                             <TableCell align="right">İşlemler</TableCell>
@@ -111,12 +148,15 @@ export const TradesTab: React.FC<{ active: boolean }> = ({ active }) => {
                     <TableBody>
                         {ustalar.map((usta) => (
                             <TableRow key={usta.id} sx={{ '&:last-child td, &:last-child th': { border: 0 }, opacity: usta.active ? 1 : 0.5 }}>
+                                <TableCell>
+                                    <Avatar src={usta.profileImageUrl ? `${API_URL}/api/files/${usta.profileImageUrl}` : undefined} />
+                                </TableCell>
                                 <TableCell>{usta.name}</TableCell>
                                 <TableCell align="center">
                                     <Switch checked={usta.active} onChange={() => handleToggleActive(usta.id, usta.active)} color="success" />
                                 </TableCell>
                                 <TableCell align="right">
-                                    <IconButton size="small" sx={{ mr: 1 }} disabled> {/* Düzenleme ileride eklenebilir */}
+                                    <IconButton size="small" sx={{ mr: 1 }} onClick={() => handleOpenModal(usta)}>
                                         <EditIcon />
                                     </IconButton>
                                     <Button variant="outlined" size="small" startIcon={<PhotoLibraryIcon />} onClick={() => navigate(`/admin/usta-portfolio/${usta.id}`)}>
@@ -128,18 +168,28 @@ export const TradesTab: React.FC<{ active: boolean }> = ({ active }) => {
                     </TableBody>
                 </Table>
             </TableContainer>
-            <TablePagination component="div" count={totalElements} page={page} onPageChange={(e, newPage) => setPage(newPage)} rowsPerPage={rowsPerPage} onRowsPerPageChange={(e) => { setRowsPerPage(parseInt(e.target.value, 10)); setPage(0); }} />
+            <TablePagination
+                component="div"
+                count={totalElements}
+                page={page}
+                onPageChange={(e, newPage) => setPage(newPage)}
+                rowsPerPage={rowsPerPage}
+                onRowsPerPageChange={(e) => { setRowsPerPage(parseInt(e.target.value, 10)); setPage(0); }}
+             />
 
             <Modal open={isModalOpen} onClose={handleCloseModal}>
                 <Box sx={modalStyle}>
-                    <Typography variant="h6" component="h2">Yeni Usta Ekle</Typography>
+                    <Typography variant="h6" component="h2">{editingUsta ? 'Usta Düzenle' : 'Yeni Usta Ekle'}</Typography>
                     <Box component="form" onSubmit={handleSaveUsta} sx={{ mt: 2 }}>
-                        <TextField fullWidth required label="Usta Adı" value={newUstaName} onChange={e => setNewUstaName(e.target.value)} margin="normal" />
+                        <TextField fullWidth required label="Usta Adı" value={ustaName} onChange={e => setUstaName(e.target.value)} margin="normal" />
                         <Button variant="contained" component="label" fullWidth sx={{ mt: 1 }}>
-                            Profil Resmi Seç (Opsiyonel)
+                            Profil Resmi Seç {editingUsta ? '(Değiştirmek için)' : '(Opsiyonel)'}
                             <input type="file" hidden accept="image/*" onChange={handleFileChange} />
                         </Button>
-                        {profileImageFile && <Typography variant="body2" sx={{ mt: 1 }}>Seçilen: {profileImageFile.name}</Typography>}
+                        {profileImageFile && <Typography variant="body2" sx={{ mt: 1 }}>Yeni Seçilen: {profileImageFile.name}</Typography>}
+                        {editingUsta && editingUsta.profileImageUrl && !profileImageFile && (
+                            <Typography variant="body2" sx={{ mt: 1 }}>Mevcut Resim: {editingUsta.profileImageUrl}</Typography>
+                        )}
                         <Box sx={{ mt: 3, display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
                             <Button onClick={handleCloseModal}>İptal</Button>
                             <Button type="submit" variant="contained" disabled={formLoading}>{formLoading ? <CircularProgress size={24} /> : 'Kaydet'}</Button>
