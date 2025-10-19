@@ -9,7 +9,7 @@ interface UstaWithImage extends Usta {
     profileImageUrl?: string;
 }
 
-// Sadece temel domain adresini alıyoruz
+// Sadece temel domain adresini alıyoruz (http://localhost:8080 veya https://utm-backend-ptnn.onrender.com)
 const API_DOMAIN = process.env.REACT_APP_API_URL || 'http://localhost:8080';
 
 const UstaRehberiListPage: React.FC = () => {
@@ -55,8 +55,8 @@ const UstaRehberiListPage: React.FC = () => {
                                                 display: 'flex',
                                                 justifyContent: 'center',
                                                 alignItems: 'center',
-                                                // DİKKAT: URL doğru şekilde oluşturuluyor
-                                                backgroundImage: usta.profileImageUrl ? `url(${API_DOMAIN}/api/files/${usta.profileImageUrl})` : 'none',
+                                                // URL'yi API_DOMAIN kullanarak doğru oluşturuyoruz
+                                                backgroundImage: usta.profileImageUrl ? `url(${API_DOMAIN}/files/${usta.profileImageUrl})` : 'none',
                                                 backgroundSize: 'cover',
                                                 backgroundPosition: 'center',
                                                 bgcolor: !usta.profileImageUrl ? 'grey.200' : 'transparent'
