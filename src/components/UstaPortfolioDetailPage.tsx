@@ -2,11 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { Container, Typography, Box, CircularProgress, Paper, Button, Divider, Card, CardMedia, CardContent } from '@mui/material';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Header } from './layout/Header';
-import { getUstalar, Usta } from '../services/api'; // getUstalar ve Usta import edildi
+import { getUstalar, Usta } from '../services/api';
 import { RehberIcerikDto, getActivePortfolioByUsta } from '../services/api';
 import PhoneIcon from '@mui/icons-material/Phone';
 import ConstructionIcon from '@mui/icons-material/Construction';
 
+// Sadece temel domain adresini alıyoruz (http://localhost:8080 veya https://utm-backend-ptnn.onrender.com)
 const API_DOMAIN = process.env.REACT_APP_API_URL || 'http://localhost:8080';
 
 const UstaPortfolioDetailPage: React.FC = () => {
@@ -20,12 +21,9 @@ const UstaPortfolioDetailPage: React.FC = () => {
         if (ustaId) {
             const fetchDetails = async () => {
                 try {
-                    // Hem portfolyoyu hem de usta detayını çek
                     const portfolioRes = await getActivePortfolioByUsta(ustaId);
                     setPortfolio(portfolioRes.data);
-                    
-                    // Usta ismini bulmak için tüm ustaları çekip filtreleyebiliriz
-                    // (Daha büyük projelerde bu işlem için tek bir usta getiren ayrı bir API olurdu)
+
                     const ustalarRes = await getUstalar();
                     const currentUsta = ustalarRes.data.find(u => u.id === ustaId);
                     setUsta(currentUsta || null);
@@ -78,8 +76,10 @@ const UstaPortfolioDetailPage: React.FC = () => {
                     {portfolio.length > 0 ? portfolio.map(item => (
                         <Card key={item.id} sx={{ mb: 4 }}>
                             {item.mediaType === 'IMAGE' ? (
-                                <CardMedia component="img" image={`${API_DOMAIN}/api/files/${item.mediaUrl}`} alt={item.title} sx={{ maxHeight: 500 }} />
+                                // URL'yi API_DOMAIN kullanarak doğru oluşturuyoruz
+                                <CardMedia component="img" image={`${API_DOMAIN}/api/files/${item.mediaUrl}`} alt={item.title} sx={{ maxHeight: 500, objectFit: 'contain' }} />
                             ) : (
+                                // URL'yi API_DOMAIN kullanarak doğru oluşturuyoruz
                                 <CardMedia component="video" controls src={`${API_DOMAIN}/api/files/${item.mediaUrl}`} sx={{ maxHeight: 500, width: '100%' }} />
                             )}
                             <CardContent>

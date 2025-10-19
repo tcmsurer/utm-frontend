@@ -2,13 +2,18 @@ import React, { useState, useEffect } from 'react';
 import { Container, Typography, Box, CircularProgress, Card, CardActionArea, CardMedia, CardContent } from '@mui/material';
 import { Link } from 'react-router-dom';
 import { Header } from './layout/Header';
-import { getUstalar, Usta } from '../services/api'; // Usta tipi artık güncel
+import { getUstalar, Usta } from '../services/api';
 import ConstructionIcon from '@mui/icons-material/Construction';
 
-const API_DOMAIN = process.env.REACT_APP_API_URL || 'http://localhost:8080'; 
+interface UstaWithImage extends Usta {
+    profileImageUrl?: string;
+}
+
+// Sadece temel domain adresini alıyoruz
+const API_DOMAIN = process.env.REACT_APP_API_URL || 'http://localhost:8080';
 
 const UstaRehberiListPage: React.FC = () => {
-    const [ustalar, setUstalar] = useState<Usta[]>([]); // Artık Usta tipi doğru veriyi içeriyor
+    const [ustalar, setUstalar] = useState<UstaWithImage[]>([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -44,12 +49,13 @@ const UstaRehberiListPage: React.FC = () => {
                                     <CardActionArea component={Link} to={`/usta-portfolio/${usta.id}`} sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
                                         <CardMedia
                                             component="div"
-                                            sx={{ 
-                                                height: 200, 
+                                            sx={{
+                                                height: 200,
                                                 width: '100%',
                                                 display: 'flex',
                                                 justifyContent: 'center',
                                                 alignItems: 'center',
+                                                // DİKKAT: URL doğru şekilde oluşturuluyor
                                                 backgroundImage: usta.profileImageUrl ? `url(${API_DOMAIN}/api/files/${usta.profileImageUrl})` : 'none',
                                                 backgroundSize: 'cover',
                                                 backgroundPosition: 'center',
