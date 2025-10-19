@@ -77,10 +77,10 @@ const UstaPortfolioDetailPage: React.FC = () => {
                         <Card key={item.id} sx={{ mb: 4 }}>
                             {item.mediaType === 'IMAGE' ? (
                                 // URL'yi API_DOMAIN kullanarak doğru oluşturuyoruz
-                                <CardMedia component="img" image={`${API_DOMAIN}/api/files/${item.mediaUrl}`} alt={item.title} sx={{ maxHeight: 500, objectFit: 'contain' }} />
+                                <CardMedia component="img" image={`${API_DOMAIN}/files/${item.mediaUrl}`} alt={item.title} sx={{ maxHeight: 500, objectFit: 'contain' }} />
                             ) : (
                                 // URL'yi API_DOMAIN kullanarak doğru oluşturuyoruz
-                                <CardMedia component="video" controls src={`${API_DOMAIN}/api/files/${item.mediaUrl}`} sx={{ maxHeight: 500, width: '100%' }} />
+                                <CardMedia component="video" controls src={`${API_DOMAIN}/files/${item.mediaUrl}`} sx={{ maxHeight: 500, width: '100%' }} />
                             )}
                             <CardContent>
                                 <Typography gutterBottom variant="h5" component="div">{item.title}</Typography>
