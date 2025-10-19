@@ -54,7 +54,19 @@ const HizmetlerimizPage: React.FC = () => {
         <div>
             <Header />
             <Container maxWidth="lg" sx={{ my: 4 }}>
-                <Typography variant="h3" component="h1" gutterBottom sx={{ textAlign: 'center', mb: 4, color: 'white' }}>
+                <Typography 
+                    variant="h3" 
+                    component="h1" 
+                    gutterBottom 
+                    sx={{ 
+                        textAlign: 'center', 
+                        mb: 4, 
+                        // DİKKAT: Stil güncellendi
+                        fontWeight: 700, 
+                        color: '#0D47A1', 
+                        textShadow: '1px 1px 3px rgba(0, 0, 0, 0.1)' 
+                    }}
+                >
                     Hizmetlerimiz
                 </Typography>
                 <Box sx={{ display: 'flex', flexWrap: 'wrap', mx: -2 }}>

@@ -17,7 +17,7 @@ const modalStyle = {
     p: 4,
 };
 
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8080';
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8080/api';
 
 interface UstaWithStatus extends Usta {
     active: boolean;
@@ -27,7 +27,7 @@ interface UstaWithStatus extends Usta {
 export const TradesTab: React.FC<{ active: boolean }> = ({ active }) => {
     const [ustalar, setUstalar] = useState<UstaWithStatus[]>([]);
     const [page, setPage] = useState(0);
-    const [rowsPerPage, setRowsPerPage] = useState(10);
+    const [rowsPerPage, setRowsPerPage] = useState(20);
     const [totalElements, setTotalElements] = useState(0);
     const [error, setError] = useState<string | null>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -175,6 +175,7 @@ export const TradesTab: React.FC<{ active: boolean }> = ({ active }) => {
                 onPageChange={(e, newPage) => setPage(newPage)}
                 rowsPerPage={rowsPerPage}
                 onRowsPerPageChange={(e) => { setRowsPerPage(parseInt(e.target.value, 10)); setPage(0); }}
+                rowsPerPageOptions={[20, 50, 100]}
              />
 
             <Modal open={isModalOpen} onClose={handleCloseModal}>

@@ -161,8 +161,18 @@ const Home: React.FC = () => {
             <Header />
             <Container maxWidth="md" sx={{ my: 4 }}>
                 <Paper sx={{ p: { xs: 2, sm: 4 }, backgroundColor: 'rgba(255, 255, 255, 0.98)', borderRadius: '16px' }}>
-                    <Typography component="h1" variant="h4" align="center" gutterBottom>
-                        Usta Bulmanın En Kolay Yolu
+                    <Typography 
+                        component="h1" 
+                        variant="h4" 
+                        align="center" 
+                        gutterBottom
+                        sx={{
+                            fontWeight: 700, // Kalın bir font ağırlığı
+                            color: '#0D47A1', // Ana koyu lacivert renk
+                            textShadow: '1px 1px 3px rgba(0, 0, 0, 0.1)' // Çok hafif bir gölge
+                        }}
+                    >
+                        Aradığın Usta Burada
                     </Typography>
                     <Stepper activeStep={activeStep} sx={{ pt: 3, pb: 5 }}>
                         {steps.map((label) => (

@@ -8,7 +8,7 @@ import PhoneIcon from '@mui/icons-material/Phone';
 import ConstructionIcon from '@mui/icons-material/Construction';
 
 // Sadece temel domain adresini alıyoruz (http://localhost:8080 veya https://utm-backend-ptnn.onrender.com)
-const API_DOMAIN = process.env.REACT_APP_API_URL || 'http://localhost:8080';
+const API_DOMAIN = process.env.REACT_APP_API_URL || 'http://localhost:8080/api';
 
 const UstaPortfolioDetailPage: React.FC = () => {
     const { ustaId } = useParams<{ ustaId: string }>();

@@ -10,7 +10,7 @@ interface UstaWithImage extends Usta {
 }
 
 // Sadece temel domain adresini alıyoruz (http://localhost:8080 veya https://utm-backend-ptnn.onrender.com)
-const API_DOMAIN = process.env.REACT_APP_API_URL || 'http://localhost:8080';
+const API_DOMAIN = process.env.REACT_APP_API_URL || 'http://localhost:8080/api';
 
 const UstaRehberiListPage: React.FC = () => {
     const [ustalar, setUstalar] = useState<UstaWithImage[]>([]);
@@ -38,7 +38,19 @@ const UstaRehberiListPage: React.FC = () => {
         <div>
             <Header />
             <Container maxWidth="lg" sx={{ my: 4 }}>
-                <Typography variant="h3" component="h1" gutterBottom sx={{ textAlign: 'center', mb: 4, color: 'white' }}>
+                <Typography 
+                    variant="h3" 
+                    component="h1" 
+                    gutterBottom 
+                    sx={{ 
+                        textAlign: 'center', 
+                        mb: 4, 
+                        // DİKKAT: Stil güncellendi
+                        fontWeight: 700, 
+                        color: '#0D47A1', 
+                        textShadow: '1px 1px 3px rgba(0, 0, 0, 0.1)' 
+                    }}
+                >
                     Usta Rehberi
                 </Typography>
                 <Box sx={{ display: 'flex', flexWrap: 'wrap', mx: -2 }}>
