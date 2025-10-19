@@ -7,7 +7,7 @@ import { RehberIcerikDto, getActivePortfolioByUsta } from '../services/api';
 import PhoneIcon from '@mui/icons-material/Phone';
 import ConstructionIcon from '@mui/icons-material/Construction';
 
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8080';
+const API_DOMAIN = process.env.REACT_APP_API_URL || 'http://localhost:8080';
 
 const UstaPortfolioDetailPage: React.FC = () => {
     const { ustaId } = useParams<{ ustaId: string }>();
@@ -78,9 +78,9 @@ const UstaPortfolioDetailPage: React.FC = () => {
                     {portfolio.length > 0 ? portfolio.map(item => (
                         <Card key={item.id} sx={{ mb: 4 }}>
                             {item.mediaType === 'IMAGE' ? (
-                                <CardMedia component="img" image={`${API_URL}/api/files/${item.mediaUrl}`} alt={item.title} sx={{ maxHeight: 500 }} />
+                                <CardMedia component="img" image={`${API_DOMAIN}/api/files/${item.mediaUrl}`} alt={item.title} sx={{ maxHeight: 500 }} />
                             ) : (
-                                <CardMedia component="video" controls src={`${API_URL}/api/files/${item.mediaUrl}`} sx={{ maxHeight: 500, width: '100%' }} />
+                                <CardMedia component="video" controls src={`${API_DOMAIN}/api/files/${item.mediaUrl}`} sx={{ maxHeight: 500, width: '100%' }} />
                             )}
                             <CardContent>
                                 <Typography gutterBottom variant="h5" component="div">{item.title}</Typography>
