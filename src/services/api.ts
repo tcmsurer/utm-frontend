@@ -3,7 +3,7 @@ import axios, { AxiosResponse } from 'axios';
 // Backend sunucusunun temel adresini alıyoruz ( /api YOK)
 const API_DOMAIN = process.env.REACT_APP_API_URL || 'http://localhost:8080'; 
 // Axios'un kullanacağı tam base URL'i oluşturuyoruz ( /api VAR)
-const API_BASE_URL = `${API_DOMAIN}/api`;
+const API_BASE_URL = `${API_DOMAIN}`;
 
 const api = axios.create({
   baseURL: API_BASE_URL, // Axios artık otomatik olarak /api ekleyecek
