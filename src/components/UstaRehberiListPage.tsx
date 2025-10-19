@@ -5,7 +5,7 @@ import { Header } from './layout/Header';
 import { getUstalar, Usta } from '../services/api'; // Usta tipi artık güncel
 import ConstructionIcon from '@mui/icons-material/Construction';
 
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8080';
+const API_DOMAIN = process.env.REACT_APP_API_URL || 'http://localhost:8080'; 
 
 const UstaRehberiListPage: React.FC = () => {
     const [ustalar, setUstalar] = useState<Usta[]>([]); // Artık Usta tipi doğru veriyi içeriyor
@@ -50,7 +50,7 @@ const UstaRehberiListPage: React.FC = () => {
                                                 display: 'flex',
                                                 justifyContent: 'center',
                                                 alignItems: 'center',
-                                                backgroundImage: usta.profileImageUrl ? `url(${API_URL}/api/files/${usta.profileImageUrl})` : 'none',
+                                                backgroundImage: usta.profileImageUrl ? `url(${API_DOMAIN}/api/files/${usta.profileImageUrl})` : 'none',
                                                 backgroundSize: 'cover',
                                                 backgroundPosition: 'center',
                                                 bgcolor: !usta.profileImageUrl ? 'grey.200' : 'transparent'
